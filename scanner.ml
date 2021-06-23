@@ -1,3 +1,6 @@
+open String_lib
+open Core
+
 module type LEXICAL = sig
   type token = Id of string | Key of string | Nat of int | Star
 (*put unsigned int from here if you ever use it https://opam.ocaml.org/packages/stdint/*)
@@ -14,16 +17,26 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
 
 (*PRE: a is a string comprised of alphanumeric characters
   POST: token resulting from scanning a*)
-  let val alphaTok : string -> token = fun a -> if member(a, Keywords.alpha_num) then Key(a)
-        else Id(a)
+  let val alphaTok : string -> token = fun a ->
+    if member(a, Keywords.alpha_num) then Key(a) else Id(a)
 
-(* PRE: scanned is a string comprised of punctuation
-   POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
+(*
+TYPE: scan_symbol: string x string stream -> token x string stream
+PRE: scanned is comprised of punctuation
+POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
    (scanned ++ rem) and rem' is remainder of rem left unscanned*)
   let fun scan_symbol(scanned, rem) =
-    match 
+    match (headtail_opt rem) with
+      None -> Key(scanned)
+    | Some(head, tail) -> if (member(scanned, Kewords.symbols) or is_alphanum(head) 
 
+  end*)
 
+(*use sets instead of lists
+use streams
+  Stream.of_string builds a char stream from a string <-
+what you're really doing with those string functions is implementing a stream,
+rephrase it in those terms by looking at the cmtool manual*)
 
 (*Definition 1 : bool := true. doesnt work
 Definition 1x : bool := true. doesnt work
