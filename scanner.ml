@@ -14,13 +14,14 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
 
 (*PRE: a is a string comprised of alphanumeric characters
   POST: token resulting from scanning a*)
-  let val alphaTok = fun a -> if member(a, Keywords.alpha_num) then Key(a)
+  let val alphaTok : string -> token = fun a -> if member(a, Keywords.alpha_num) then Key(a)
         else Id(a)
 
 (* PRE: scanned is a string comprised of punctuation
    POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
    (scanned ++ rem) and rem' is remainder of rem left unscanned*)
-let fun scan_symbol(scanned, rem)
+  let fun scan_symbol(scanned, rem) =
+    match 
 
 
 
