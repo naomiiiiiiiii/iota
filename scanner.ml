@@ -1,7 +1,9 @@
+include Base
 include Core
 include Core_kernel
 include String_lib
 module MyString = String_lib
+let o = Fn.compose
 
   let () = Printf.printf "aa %s \n" "ooo"
 
@@ -42,19 +44,28 @@ POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
       then (Key(scanned), rem)
       else scan_symbol(scanned^String.of_char(head), tail)
 
+(*TYPE: scan_fn_help: token list x string -> token list
+PRE: toks is list of tokens already scanned (read from right to left),
+  s is string remaining to be scanned
+POST: ouputs a list containing (the tokens from toks, then the tokens scanned from s)
+  read from left to right *)
   let rec scan_fn_help toks s =
     match (MyString.getc s) with
       None -> List.rev toks
-    | Some(head, tail) ->
+    | Some(head, tail) -> let (newtoks, news) =
       if Char.is_alpha(head) (*identifier or keyword*)
       then let (id, rem) = MyString.splitl (Char.is_alphanum) s in
-        let tok = alphaTok(id) in
-        scan_fn_help (tok::toks) rem
-else if Char.is_digit(head) (*start of a number*)
-then let (num, rem) = MyString.splitl (Char.is_digit) s in
-  let tok = natTok(num) in
-  scan_fn_help (tok::toks) rem
-    else raise (Failure "not done yet")
+        (alphaTok(id)::toks, rem)
+      else if Char.is_digit(head) (*number*)
+      then let (num, rem) = MyString.splitl (Char.is_digit) s in
+        (natTok(num)::toks, rem)
+      else if MyString.isPunct(head) (*special symbol*)
+      then let (tok, rem)= scan_symbol(String.of_char(head), tail) in
+        (tok::toks, rem)
+      else (toks, (String.lstrip ~drop:(o not MyString.isGraph) s))
+        in scan_fn_help newtoks news
+
+  let scan_fn = scan_fn_help []
 
 end
 
