@@ -4,3 +4,7 @@
  (name scanner)
  (libraries base stdio core)
  )
+
+(env
+  (dev
+    (flags (:standard -warn-error -A))))

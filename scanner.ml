@@ -1,5 +1,7 @@
 open Core
+open Core_kernel
 
+  let () = Printf.printf "aa %s \n" "ooo"
 
 module type LEXICAL = sig
   type token = Id of string | Key of string | Nat of int | Star
@@ -24,13 +26,13 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
 PRE: scanned is comprised of punctuation
 POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
    (scanned ++ rem) and rem' is remainder of rem left unscanned*)
-  let scan_symbol(scanned, rem) =
+  let rec scan_symbol(scanned, rem) =
     match (FStream.front rem) with
-      Nil -> (Key(scanned), rem)
-    | Some(head, tail) ->
-      if (mem(scanned, Keywords.symbols) || is_alphanum(head))
+      FStream.Nil -> (Key(scanned), rem)
+    | FStream.Cons(head, tail) ->
+      if ((List.mem Keywords.symbols scanned String.equal) || Char.is_alphanum(head))
       then (Key(scanned), rem)
-      else scan_symbol(scanned^escaped(rem), tail)
+      else scan_symbol(scanned^Char.escaped(head), tail)
 
   let scan_fn s = [Id ""]
 end
