@@ -1,5 +1,5 @@
-open String_lib
 open Core
+
 
 module type LEXICAL = sig
   type token = Id of string | Key of string | Nat of int | Star
@@ -13,24 +13,28 @@ module type KEYWORD = sig
 end
 
 module Lexical (Keywords: KEYWORD) : LEXICAL = struct
-  let type token = Id of string | Key of string | Nat of int | Star
+  type token = Id of string | Key of string | Nat of int | Star
 
 (*PRE: a is a string comprised of alphanumeric characters
   POST: token resulting from scanning a*)
-  let val alphaTok : string -> token = fun a ->
-    if member(a, Keywords.alpha_num) then Key(a) else Id(a)
+  (*let alphaTok : string -> token = fun a ->
+    if member(a, Keywords.alpha_num) then Key(a) else Id(a)*)
 
-(*
-TYPE: scan_symbol: string x string stream -> token x string stream
+(*TYPE: scan_symbol: string x char stream -> token x string stream
 PRE: scanned is comprised of punctuation
 POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
    (scanned ++ rem) and rem' is remainder of rem left unscanned*)
-  let fun scan_symbol(scanned, rem) =
-    match (headtail_opt rem) with
-      None -> Key(scanned)
-    | Some(head, tail) -> if (member(scanned, Kewords.symbols) or is_alphanum(head) 
+  let scan_symbol(scanned, rem) =
+    match (FStream.front rem) with
+      Nil -> (Key(scanned), rem)
+    | Some(head, tail) ->
+      if (mem(scanned, Keywords.symbols) || is_alphanum(head))
+      then (Key(scanned), rem)
+      else scan_symbol(scanned^escaped(rem), tail)
 
-  end*)
+  let scan_fn s = [Id ""]
+end
+
 
 (*use sets instead of lists
 use streams

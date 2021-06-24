@@ -1,0 +1,6 @@
+(copy_files# ./cmtool/ocaml/FStream.ml)
+
+(executable
+ (name scanner)
+ (libraries base stdio core)
+ )
