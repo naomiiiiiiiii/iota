@@ -22,7 +22,13 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
 (*PRE: a is a string comprised of alphanumeric characters
   POST: token resulting from scanning a*)
  let alphaTok : string -> token = fun a ->
-    if (MyString.mem Keywords.alpha_num a) then Key(a) else Id(a)
+   if (MyString.mem Keywords.alpha_num a) then Key(a) else Id(a)
+
+ let natTok: string -> token = fun a -> try (let nat = int_of_string(a) in
+                                             if (nat < 0) then
+                                               (raise (Failure "Nats cannot be negative!"))
+                                             else (Nat nat))
+   with Failure error -> raise (Failure (error^" in NatTok"))
 
 (*TYPE: scan_symbol: string x string -> token x string
 PRE: scanned is comprised of punctuation
@@ -32,11 +38,24 @@ POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
     match (MyString.getc rem) with
       None -> (Key(scanned), rem)
     | Some(head, tail) ->
-      if ((MyString.mem Keywords.symbols scanned) || Char.is_alphanum(head))
+      if ((MyString.mem Keywords.symbols scanned) || (not (MyString.isPunct(head))))
       then (Key(scanned), rem)
-      else scan_symbol(scanned^Char.escaped(head), tail)
+      else scan_symbol(scanned^String.of_char(head), tail)
 
-(*let scan_fn s = [Id *)
+  let rec scan_fn_help toks s =
+    match (MyString.getc s) with
+      None -> List.rev toks
+    | Some(head, tail) ->
+      if Char.is_alpha(head) (*identifier or keyword*)
+      then let (id, rem) = MyString.splitl (Char.is_alphanum) s in
+        let tok = alphaTok(id) in
+        scan_fn_help (tok::toks) rem
+else if Char.is_digit(head) (*start of a number*)
+then let (num, rem) = MyString.splitl (Char.is_digit) s in
+  let tok = natTok(num) in
+  scan_fn_help (tok::toks) rem
+    else raise (Failure "not done yet")
+
 end
 
 
