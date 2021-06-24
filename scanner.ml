@@ -1,5 +1,7 @@
-open Core
-open Core_kernel
+include Core
+include Core_kernel
+include String_lib
+module MyString = String_lib
 
   let () = Printf.printf "aa %s \n" "ooo"
 
@@ -19,22 +21,22 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
 
 (*PRE: a is a string comprised of alphanumeric characters
   POST: token resulting from scanning a*)
-  (*let alphaTok : string -> token = fun a ->
-    if member(a, Keywords.alpha_num) then Key(a) else Id(a)*)
+ let alphaTok : string -> token = fun a ->
+    if (MyString.mem Keywords.alpha_num a) then Key(a) else Id(a)
 
-(*TYPE: scan_symbol: string x char stream -> token x string stream
+(*TYPE: scan_symbol: string x string -> token x string
 PRE: scanned is comprised of punctuation
 POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
    (scanned ++ rem) and rem' is remainder of rem left unscanned*)
   let rec scan_symbol(scanned, rem) =
-    match (FStream.front rem) with
-      FStream.Nil -> (Key(scanned), rem)
-    | FStream.Cons(head, tail) ->
-      if ((List.mem Keywords.symbols scanned String.equal) || Char.is_alphanum(head))
+    match (MyString.getc rem) with
+      None -> (Key(scanned), rem)
+    | Some(head, tail) ->
+      if ((MyString.mem Keywords.symbols scanned) || Char.is_alphanum(head))
       then (Key(scanned), rem)
       else scan_symbol(scanned^Char.escaped(head), tail)
 
-  let scan_fn s = [Id ""]
+(*let scan_fn s = [Id *)
 end
 
 

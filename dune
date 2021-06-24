@@ -1,4 +1,4 @@
-(copy_files# ./cmtool/ocaml/FStream.ml)
+; (copy_files# ./cmtool/ocaml/FStream.ml)
 
 (executable
  (name scanner)
