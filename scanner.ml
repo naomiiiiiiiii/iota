@@ -16,6 +16,8 @@ end
 module type KEYWORD = sig
   val alpha_num : string list
   val symbols : string list
+  val commentl: char
+  val commentr: char
 end
 
 module Lexical (Keywords: KEYWORD) : LEXICAL = struct
@@ -33,16 +35,16 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
    with Failure error -> raise (Failure (error^" in NatTok"))
 
 (*TYPE: scan_symbol: string x string -> token x string
-PRE: scanned is comprised of punctuation
+PRE: front nonempty, comprised of punctuation
 POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
-   (scanned ++ rem) and rem' is remainder of rem left unscanned*)
-  let rec scan_symbol(scanned, rem) =
+   (front ++ rem) and rem' is remainder of rem left unscanned*)
+  let rec scan_symbol(front, rem) =
     match (MyString.getc rem) with
-      None -> (Key(scanned), rem)
+      None -> (Key(front), rem)
     | Some(head, tail) ->
-      if ((MyString.mem Keywords.symbols scanned) || (not (MyString.isPunct(head))))
-      then (Key(scanned), rem)
-      else scan_symbol(scanned^String.of_char(head), tail)
+      if ((MyString.mem Keywords.symbols front) || (not (MyString.isPunct(head))))
+      then (Key(front), rem)
+      else scan_symbol(front^String.of_char(head), tail)
 
 (*TYPE: scan_fn_help: token list x string -> token list
 PRE: toks is list of tokens already scanned (read from right to left),
@@ -53,11 +55,13 @@ POST: ouputs a list containing (the tokens from toks, then the tokens scanned fr
     match (MyString.getc s) with
       None -> List.rev toks
     | Some(head, tail) -> let (newtoks, news) =
-      if Char.is_alpha(head) (*identifier or keyword*)
-      then let (id, rem) = MyString.splitl (Char.is_alphanum) s in
+      if (Char.equal head Keywords.commentl)
+      then (toks, MyString.dropl_char tail Keywords.commentr "unclosed comment")
+      else if Char.is_alpha(head) (*identifier or keyword*)
+      then let (id, rem) = MyString.partition (Char.is_alphanum) s in
         (alphaTok(id)::toks, rem)
       else if Char.is_digit(head) (*number*)
-      then let (num, rem) = MyString.splitl (Char.is_digit) s in
+      then let (num, rem) = MyString.partition (Char.is_digit) s in
         (natTok(num)::toks, rem)
       else if MyString.isPunct(head) (*special symbol*)
       then let (tok, rem)= scan_symbol(String.of_char(head), tail) in
@@ -70,11 +74,7 @@ POST: ouputs a list containing (the tokens from toks, then the tokens scanned fr
 end
 
 
-(*use sets instead of lists
-use streams
-  Stream.of_string builds a char stream from a string <-
-what you're really doing with those string functions is implementing a stream,
-rephrase it in those terms by looking at the cmtool manual*)
+(*use sets instead of lists https://ocaml.janestreet.com/ocaml-core/109.55.00/tmp/core_kernel/Set.html*)
 
 (*Definition 1 : bool := true. doesnt work
 Definition 1x : bool := true. doesnt work
@@ -91,3 +91,8 @@ Definition x1 : bool := true. works
 a variable cannot be named a number
   it must be proceeded by a letter
   if an number is on its own then its a number *)
+
+(*use streams
+  Stream.of_string builds a char stream from a string <-
+what you're really doing with those string functions is implementing a stream,
+rephrase it in those terms by looking at the cmtool manual*)
