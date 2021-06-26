@@ -12,7 +12,6 @@ module type PARSE = sig
   (*if a precondition is not met, raise syntax error*)
   exception SyntaxError of string
   type token
-  type Exp = Id of int | Key of string | Nat of int | Star
 
   (*PRE: L = (Id s)::rem, ie L starts with identifier token
     POST: id L = (s, rem)*)
@@ -34,7 +33,7 @@ module type PARSE = sig
   val epsilon : token list -> 'b list * token list
 
   (*POST: join f g a tries f a. if this fails, it returns g a.*)
-  val join : (token list -> 'b) * (token list -> 'b) -> token list -> 'b
+  val (|:|) : (token list -> 'b) * (token list -> 'b) -> token list -> 'b
 
   (*POST: force f tries f a. if this fails, it forces toplevel failure.*)
   val force : (token list -> 'b * token list ) -> token list -> 'b * token list
@@ -42,18 +41,24 @@ module type PARSE = sig
   (* PRE: f a = (out1, rem1), g rem1 = (out2, rem2)
 POST: circ g f applies f and g in sequence. that is,
 circ g f a = ((out1, out2), rem2)*)
-  val circ : (token list -> 'd * token list) * (token list -> 'b * token list)
+  val circ : (token list -> 'd * token list) -> (token list -> 'b * token list)
     -> token list -> ('b * 'd) * 'token list
 
   (* PRE: g rem = (out2, rem')
-POST: keyseq k g applies (key k) and g in sequence. that is,
-seq (k, g) (Key k::rem) = (out2, rem')*)
-  val keycirc : string * (token list -> 'a * token list) -> token list ->
+POST: keycircl g k applies (key k) and g in sequence. that is,
+keycircl g k (Key k::rem) = (out2, rem')*)
+  val keycircl : (token list -> 'a * token list) -> string -> token list ->
+    'a * token list
+
+  (* PRE: g L = (out1, Key k :: rem')
+POST: keycircr k g applies g and (key k) in sequence. that is,
+keycircr g k L = (out1, rem')*)
+  val keycircr : string -> (token list -> 'a * token list) -> token list ->
     'a * token list
 
   (*POST: pipe f g pipes (the first component) of the output of f into g.
 ie, pipe f g a = ((g (f a).1), (f a).2)*)
-  val pipe: (token list -> 'b * token list) * ('b -> 'd) ->
+  val (>>): (token list -> 'b * token list) * ('b -> 'd) ->
     token list -> 'd * token list
 
   (*POST: repeat f start L = (L, a) where
@@ -66,6 +71,17 @@ f a failed*)
   otherwise, reader fails.*)
  val reader: (token list -> 'a * token list) -> string -> 'a
 end
+
+module Parsing (Lex: LEXICAL): PARSE = struct
+  type token = Lex.token
+  exception SyntaxErr of string
+
+  let id L = match L with
+      (Lex.Id s :: toks) -> (a, toks)
+    | _ -> raise SyntaxErr "expected identifier\n"
+
+  let 
+
 
 
 (*am already making an abstract syntax tree, making a parse tree over
