@@ -4,10 +4,12 @@ let rec parse_term toks =
     "\\") (*looking for a lambda*)
         ".") >> cons)) >> makeLambda)
   |:| ((circ (repeat atom) atom) >> applyList) (*single atom or application of atoms*)
-  |:| (keycircl atom
-         "ret") (*looking for a ret*)
-  |:| (keycircl
-      "bind") (*looking for a bind*)
+  |:| (keycircl atom "ret") (*looking for a ret*)
+  |:| (keycircl (keycircl (circ (keycircr ")" term) (*2nd term*)
+                             (keycircr "," term) (*1st term*))
+               "(" )
+         "bind") (*looking for a bind*)
+  |:| (keycircl atom "ref") (*looking for a ref*)
 
 and let rec parse_atom toks =  (id >> free)
                                |:| ((keycircr ")" (keycircl term "(")) >> pi1)
