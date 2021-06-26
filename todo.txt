@@ -1,0 +1,1 @@
+add parser components for nat and star to signature
