@@ -3,86 +3,47 @@ include Core
 include Core_kernel
 include String_lib
 include Scanner
+include Parser_sig
 module MyString = String_lib
 let o = Fn.compose
-
 let () = Printf.printf "oiueeiuroeuo %s \n" "ooo"
-
-module type PARSE = sig
-  (*if a precondition is not met, raise syntax error*)
-  exception SyntaxError of string
-  type token
-
-  (*PRE: L = (Id s)::rem, ie L starts with identifier token
-    POST: id L = (s, rem)*)
-  val id: token list -> string * token list
-
-  (*PRE: L = (Key k)::rem, ie L starts with a particular keyword token
-    POST: key k L = (k, rem)*)
-  val key : string -> token list -> string * token list
-
-(*PRE: L = (Nat n)::rem, ie L starts with nat token
-    POST: natp L = (n, rem)*)
-  val natp: token list -> int * token list
-
-  (*PRE: L = Star::rem, ie L starts with unit token
-    POST: natp L = ((), rem)*)
-  val starp: token list -> unit * token list
-
-  (*POST: epsilon L = ([], L)*)
-  val epsilon : token list -> 'b list * token list
-
-  (*POST: join f g a tries f a. if this fails, it returns g a.*)
-  val (|:|) : (token list -> 'b) * (token list -> 'b) -> token list -> 'b
-
-  (*POST: force f tries f a. if this fails, it forces toplevel failure.*)
-  val force : (token list -> 'b * token list ) -> token list -> 'b * token list
-
-  (* PRE: f a = (out1, rem1), g rem1 = (out2, rem2)
-POST: circ g f applies f and g in sequence. that is,
-circ g f a = ((out1, out2), rem2)*)
-  val circ : (token list -> 'd * token list) -> (token list -> 'b * token list)
-    -> token list -> ('b * 'd) * 'token list
-
-  (* PRE: g rem = (out2, rem')
-POST: keycircl g k applies (key k) and g in sequence. that is,
-keycircl g k (Key k::rem) = (out2, rem')*)
-  val keycircl : (token list -> 'a * token list) -> string -> token list ->
-    'a * token list
-
-  (* PRE: g L = (out1, Key k :: rem')
-POST: keycircr k g applies g and (key k) in sequence. that is,
-keycircr g k L = (out1, rem')*)
-  val keycircr : string -> (token list -> 'a * token list) -> token list ->
-    'a * token list
-
-  (*POST: pipe f g pipes (the first component) of the output of f into g.
-ie, pipe f g a = ((g (f a).1), (f a).2)*)
-  val (>>): (token list -> 'b * token list) * ('b -> 'd) ->
-    token list -> 'd * token list
-
-  (*POST: repeat f start L = (L, a) where
-L = [(f start).1, (f (f start).2).1, ...]
-f a failed*)
-  val repeat : (token list -> 'b * token list) -> token list -> 'b list * token list
-
-  (*POST: reader p s will scan s into a token list, then give the token list
-  to p. if p parses all the tokens into value a: 'a, a is returned.
-  otherwise, reader fails.*)
- val reader: (token list -> 'a * token list) -> string -> 'a
-end
 
 module Parsing (Lex: LEXICAL): PARSE = struct
   type token = Lex.token
   exception SyntaxErr of string
+  exception SyntaxErr_imeanitthistime of string
 
-  let id L = match L with
-      (Lex.Id s :: toks) -> (a, toks)
-    | _ -> raise SyntaxErr "expected identifier\n"
+  let id toks = match toks with
+      (Lex.Id s :: rem) -> (s, rem)
+    | _ -> raise (SyntaxErr "expected identifier\n")
 
-  let 
+  let key k toks = match toks with
+      (Lex.Key k0 :: rem) -> if (String.equal k k0) then (k, rem)
+      else raise (SyntaxErr ("expected keyword "^k^" got keyword "^k0^"\n"))
+    | _ -> raise (SyntaxErr ("expected keyword "^k^"\n"))
+
+  let natp toks = match toks with
+      (Lex.Nat n::rem) -> (n, rem)
+    | _  -> raise (SyntaxErr ("expected nat\n")) 
+
+  let starp toks = match toks with
+      (Lex.Star::rem) -> ((), rem)
+    | _  -> raise (SyntaxErr ("expected unit\n")) 
+
+  let epsilon toks = ([], toks)
+
+  let (|:|) p1 p2 toks = try (p1 toks) with SyntaxErr _ ->
+    (p2 toks)
+
+  let force p = fun toks -> try (p toks) with SyntaxErr msg ->
+    raise (SyntaxErr_imeanitthistime msg)
+
+  let circ g f = fun toks -> let (v1, toks1) = (f toks) in
+    let (v2, toks2) = (g toks1) in
+    ((v1, v2), toks2)
+(*start here do bind*)
+
+  let keycircl g k = fun toks -> (circ (force p) (key k)) >> snd
+end
 
 
-
-(*am already making an abstract syntax tree, making a parse tree over
-here will just move over all that work to here*)
