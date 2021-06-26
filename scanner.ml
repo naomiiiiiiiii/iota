@@ -5,7 +5,6 @@ include String_lib
 module MyString = String_lib
 let o = Fn.compose
 
-  let () = Printf.printf "aa %s \n" "ooo"
 
 module type LEXICAL = sig
   type token = Id of string | Key of string | Nat of int | Star
