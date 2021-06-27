@@ -8,7 +8,7 @@ include Scanner
 
 module type PARSE = sig
   (*if a precondition is not met, raise syntax error*)
-  exception SyntaxError of string
+  exception SyntaxErr of string
   type token
 
   (*PRE: L = (Id s)::rem, ie L starts with identifier token
@@ -31,7 +31,7 @@ module type PARSE = sig
   val epsilon : token list -> 'b list * token list
 
   (*POST: join f g a tries f a. if this fails, it returns g a.*)
-  val (|:|) : (token list -> 'b) * (token list -> 'b) -> token list -> 'b
+  val (|:|) : (token list -> 'b) -> (token list -> 'b) -> token list -> 'b
 
   (*POST: force f tries f a. if this fails, it forces toplevel failure.*)
   val force : (token list -> 'b * token list ) -> token list -> 'b * token list
@@ -40,7 +40,7 @@ module type PARSE = sig
 POST: circ g f applies f and g in sequence. that is,
 circ g f a = ((out1, out2), rem2)*)
   val circ : (token list -> 'd * token list) -> (token list -> 'b * token list)
-    -> token list -> ('b * 'd) * 'token list
+    -> token list -> ('b * 'd) * token list
 
   (* PRE: g rem = (out2, rem')
 POST: keycircl g k applies (key k) and g in sequence. that is,
@@ -56,7 +56,7 @@ keycircr g k L = (out1, rem')*)
 
   (*POST: pipe f g pipes (the first component) of the output of f into g.
 ie, pipe f g a = ((g (f a).1), (f a).2)*)
-  val (>>): (token list -> 'b * token list) * ('b -> 'd) ->
+  val (>>): (token list -> 'b * token list) -> ('b -> 'd) ->
     token list -> 'd * token list
 
   (*POST: repeat f start L = (L, a) where
