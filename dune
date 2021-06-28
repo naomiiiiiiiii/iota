@@ -1,7 +1,7 @@
 ; (copy_files# ./cmtool/ocaml/FStream.ml)
 
 (executable
- (name parser)
+ (name source)
  (libraries base stdio core)
  )
 

@@ -5,6 +5,12 @@ include String_lib
 module MyString = String_lib
 let o = Fn.compose
 
+module type KEYWORD = sig
+  val alpha_num : string list
+  val symbols : string list
+  val commentl: char
+  val commentr: char
+end
 
 module type LEXICAL = sig
   type token = Id of string | Key of string | Nat of int | Star
@@ -12,12 +18,6 @@ module type LEXICAL = sig
   val scan_fn: string -> token list
 end
 
-module type KEYWORD = sig
-  val alpha_num : string list
-  val symbols : string list
-  val commentl: char
-  val commentr: char
-end
 
 module Lexical (Keywords: KEYWORD) : LEXICAL = struct
   type token = Id of string | Key of string | Nat of int | Star

@@ -6,7 +6,6 @@ include Scanner
 include Parser_sig
 module MyString = String_lib
 let o = Fn.compose
-let () = Printf.printf "oiueeiuroeuo %s \n" "ooo"
 
 module Parsing (Lex: LEXICAL): PARSE = struct
   type token = Lex.token

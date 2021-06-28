@@ -1,3 +1,24 @@
+include Base
+include Core
+include Core_kernel
+include String_lib
+include Scanner
+include Parser 
+module MyString = String_lib
+let o = Fn.compose
+
+module SourceKey : Scanner.KEYWORD = struct
+  let alpha_num = ["ret"; "bind"; "let"; "ref"; "in"]
+  and symbols = ["("; ")"; "\\"; "="; ":="; "!"]
+  and commentl = '['
+  and commentr = ']'
+end
+
+module SourceLex : Scanner.LEXICAL = Scanner.Lexical(SourceKey)
+
+module SourceParsing : Parser.PARSE = Parser.Parsing(SourceLex)
+
+(*shouldnt ever need to parse types,just print them from AST, going other way*)
 (*let rec parse_term toks =
   ((circ term (*look for body of the lambda *)
       ((keycircr "."

@@ -5,6 +5,7 @@ include String_lib
 include Scanner
   module MyString = String_lib*)
 
+(*start here why aren't you doing this as an mli?*)
 
 module type PARSE = sig
   (*if a precondition is not met, raise syntax error*)
