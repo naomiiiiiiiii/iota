@@ -4,10 +4,15 @@ include Core_kernel
 include String_lib
 include Scanner
 include Parser
-include 
+include Source_sig 
 module MyString = String_lib
 
 let o = Fn.compose
+
+let fst4 (a, b, c, d) = a
+let snd4 (a, b, c, d) = b
+let trd4 (a, b, c, d) = c
+let fth4 (a, b, c, d) = d
 
 let () = Printf.printf "euioeuoieuroeureou \n"
 
@@ -32,23 +37,24 @@ let rec traverse (bc: int -> (string -> exp) * (int -> exp) * exp * (int -> exp)
     let traverse_b = traverse bc in
     let bcs = bc start in
     match m with
-    Free a -> fst bcs a
-  | Bound i -> fst2 bcs i
-  | Star -> fst3 bcs
-  | Nat n -> fst4 bcs n
+    Free a -> (fst4 bcs) a
+  | Bound i -> (snd4 bcs) i
+  | Star -> (trd4) bcs
+  | Nat n -> (fth4 bcs) n
   | Lam (y, m') -> Lam(y, (traverse_b (start + 1)) m)
   | Ap(m1, m2) -> Ap((traverse_b start m1), (traverse_b start m2))
   | Ret(m0) -> Ret(traverse_b start m0)
-  | Bind(m1, m2) -> Bind((traverse_b start m1), (traverse_b (i + 1) x m2))
+  | Bind(m1, m2) -> Bind((traverse_b start m1), (traverse_b (start + 1) m2))
   | Let_ref (r, v, e) -> Let_ref(r, (traverse_b start v), (traverse_b start e))
   | Asgn(r, e) -> Asgn(r, (traverse_b start e))
   | Deref(r) -> m
 
 
-let rec abstract i x m = let bc = fun i -> (
+let abstract i x = let bc = fun i -> (
       let free = fun a -> if (String.equal a x) then (Bound i) else (Free a)
-      and let other = fun x -> x in
-        (free, other, other, other))
+      and bound = fun x -> (Bound x)
+      and nat = fun x -> (Nat x) in
+        (free, bound, Star, nat))
     in
     traverse bc i
 
