@@ -6,7 +6,7 @@ let o = Fn.compose
 let getc = fun s -> try Some ((String.get s 1), (String.drop_prefix s 1))
   with Invalid_argument _ -> None
 
-let mem l s = List.mem l s ~equal:String.equal
+let member l s = List.mem l s ~equal:String.equal
 
 let isGraph c = Char.is_print(c) && (not (Char.is_whitespace(c)))
 

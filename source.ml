@@ -52,17 +52,16 @@ let rec traverse (bc: int -> (string -> exp) * (int -> exp)) (start: int): exp -
   | Deref r -> Deref(traverse_b start r)
 
 (*folds accross an expression from the most nested part (rightmost part) upwards*)
-let rec fold_expr (bc1: string -> 'a -> 'a) (bc2: int -> 'a -> 'a) (bound: string -> 'a -> 'a)
-    (start: 'a): exp -> 'a
+let rec fold_expr (bc1: string -> 'a -> 'a) (bc2: int -> 'a -> 'a) (start: 'a): exp -> 'a
   = fun m ->
     let foldbc = fold_expr bc1 bc2 in
     match m with
     Free a -> bc1 a start
   | Bound i -> bc2 i start
   | Star -> start
-  | Loc _ -> m
   | Nat _ -> start
-  | Lam (y, m') -> bound y (foldbc start m')
+  | Loc _ -> start
+  | Lam (_, m') -> foldbc start m'
   | Ap(m1, m2) -> foldbc (foldbc start m2) m1
   | Ret(m0) -> foldbc start m0
   | Bind(m1, m2) -> foldbc (foldbc start m2) m1
@@ -72,10 +71,9 @@ let rec fold_expr (bc1: string -> 'a -> 'a) (bc2: int -> 'a -> 'a) (bound: strin
 
 let fvars = 
       let bc1 = fun a -> fun l -> a::l 
-      and bc2 = fun _ -> fun l -> l
-      and bound = fun _ -> fun l -> l
+      and bc2 = fun _ -> fun l -> l 
     in
-    fold_expr bc1 bc2 bound []
+    fold_expr bc1 bc2 []
 
 
 let abstract i x = let bc = fun i -> (
@@ -116,10 +114,10 @@ let rec inst env  = let bc = fun _ -> (
 let free x = Free x
 let ret x = Ret x
 let bind (x, y) = Bind(x, y)
-let ref x = Ref(x)
+let refexp x = Ref(x)
 let asgn(x, y) = Asgn(x, y)
 let deref x = Deref x
-let star x = Star
+let star _ = Star
 let nat x = Nat x
 let loc x = Loc x
 

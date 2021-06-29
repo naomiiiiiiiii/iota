@@ -2,30 +2,33 @@ include Base
 include Core
 include Core_kernel
 include String_lib
-module myString = String_lib
 include Scanner
 include Parser
 include Parser_sig
 include Source
+module MyString = String_lib
 
 let o = Fn.compose
 
 let () = Printf.printf "hoog \n"
 
-let rec rename a bs =
-  if myString.exists a bs then rename (bs, a ˆ "’") else a
+module Lang = Source
+
+open Lang
+
+let rec rename bs a =
+  if MyString.member bs a then rename  bs (a ^ "'") else a
 
 
-let strip (m, bs) = match m with
-    Lambda.Abs(x,t) ->
-    let val newx = rename (fvars t, x)
-in strip (Lambda.subst 0 (Lambda.Free newx) t, newx :: bs)
- | _ -> (m, List.rev bs)
-end
+let rec strip(bs, m) = match m with
+    Lam(x,t) ->
+    let newx = rename (fvars t) x
+    in strip (newx :: bs, subst 0 (Free newx) t)
+  | _ -> (List.rev bs, m)
 
-let stripAbs m = strip(m, [])
+let stripAbs m = strip([], m)
 
-let spaceJoinr b acc = " " ˆ b ˆ acc
+let spaceJoin b acc = " " ^ b ^ acc
 
   let rec print_exp m = match m with
     Free a -> a
@@ -33,14 +36,14 @@ let spaceJoinr b acc = " " ˆ b ˆ acc
   | Star -> "()"
   | Nat n -> string_of_int(n)
   | Loc n -> "Address: " ^ string_of_int(n) ^ "\n"
-  | Lam (y, m') -> let (b::bs, body) = stripAbs m in
-    let front = "\\" ˆ b ˆ (List.fold_right spaceJoin ". " bs) in
-    front ^ (print_exp m')
-  | Ap(m1, m2) -> print_ap m
+  | Lam _ -> let (b::bs, body) = stripAbs m in
+    let front = "\\" ^ b ^ (List.fold_right ~f:spaceJoin ~init:". " bs) in
+    front ^ (print_exp body)
+  | Ap _ -> print_ap m
   | Ret(m0) -> "ret" ^ (atom m0)
-  | Bind(m1, m2) -> "bind(" ^ (print_exp m1) ^ "," (print_exp m2) ^ ")"
+  | Bind(m1, m2) -> "bind(" ^ (print_exp m1) ^ "," ^ (print_exp m2) ^ ")"
   | Ref(v) -> "ref" ^ (atom v)
-  | Asgn(r, e) -> (atom r) ^ ":=" ^ e
+  | Asgn(r, e) -> (atom r) ^ ":=" ^ (print_exp e)
   | Deref r -> "!"^(atom r)
 and print_ap m = match m with (*once print_app is entered all terms
                                that aren't simply identifiers will be
