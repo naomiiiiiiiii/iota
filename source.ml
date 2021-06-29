@@ -16,20 +16,24 @@ type exp = Free of string
          | Bound of int
          | Star
          | Nat of int
+         | Loc of int
          | Lam of string * exp
          | Ap of exp * exp
          | Ret of exp
          | Bind of exp * exp
-         | Let_ref of string * exp * exp
-         | Asgn of string * exp
-         | Deref of string
+         | Ref of exp (*ref(e) evaluates to a location (key) after storing e at that location.
+                      need to pass a particular ref(e) around as an argument wherever you go, two
+                      ref(e) are not the same reference!*)
+         | Asgn of exp * exp
+         | Deref of exp
 
 
 
 (*a lot of functions regarding exps involve iterating over
   the structure of a term, incrementing some nat argument when you go under a lambda
-bc is what to do on the base case expressions*)
-let rec traverse (bc: int -> (string -> exp) * (int -> exp)) (start: int)
+bc is what to do on the base case expressions
+like mapi but for exp*)
+let rec traverse (bc: int -> (string -> exp) * (int -> exp)) (start: int): exp -> exp
   = fun m ->
     let traverse_b = traverse bc in
     let bcs = bc start in
@@ -38,13 +42,40 @@ let rec traverse (bc: int -> (string -> exp) * (int -> exp)) (start: int)
   | Bound i -> (snd bcs) i
   | Star -> m
   | Nat _ -> m
+  | Loc _ -> m
   | Lam (y, m') -> Lam(y, (traverse_b (start + 1)) m')
   | Ap(m1, m2) -> Ap((traverse_b start m1), (traverse_b start m2))
   | Ret(m0) -> Ret(traverse_b start m0)
   | Bind(m1, m2) -> Bind((traverse_b start m1), (traverse_b (start + 1) m2))
-  | Let_ref (r, v, e) -> Let_ref(r, (traverse_b start v), (traverse_b start e))
-  | Asgn(r, e) -> Asgn(r, (traverse_b start e))
-  | Deref _ -> m
+  | Ref(v) -> Ref(traverse_b start v)
+  | Asgn(r, e) -> Asgn((traverse_b start r), (traverse_b start e))
+  | Deref r -> Deref(traverse_b start r)
+
+(*folds accross an expression from the most nested part (rightmost part) upwards*)
+let rec fold_expr (bc1: string -> 'a -> 'a) (bc2: int -> 'a -> 'a) (bound: string -> 'a -> 'a)
+    (start: 'a): exp -> 'a
+  = fun m ->
+    let foldbc = fold_expr bc1 bc2 in
+    match m with
+    Free a -> bc1 a start
+  | Bound i -> bc2 i start
+  | Star -> start
+  | Loc _ -> m
+  | Nat _ -> start
+  | Lam (y, m') -> bound y (foldbc start m')
+  | Ap(m1, m2) -> foldbc (foldbc start m2) m1
+  | Ret(m0) -> foldbc start m0
+  | Bind(m1, m2) -> foldbc (foldbc start m2) m1
+  | Ref(v) -> foldbc start v
+  | Asgn(r, e) -> foldbc (foldbc start e) r
+  | Deref r -> foldbc start r
+
+let fvars = 
+      let bc1 = fun a -> fun l -> a::l 
+      and bc2 = fun _ -> fun l -> l
+      and bound = fun _ -> fun l -> l
+    in
+    fold_expr bc1 bc2 bound []
 
 
 let abstract i x = let bc = fun i -> (
@@ -85,10 +116,11 @@ let rec inst env  = let bc = fun _ -> (
 let free x = Free x
 let ret x = Ret x
 let bind (x, y) = Bind(x, y)
-let let_ref ((x, y), z) = Let_ref(x, y, z)
+let ref x = Ref(x)
 let asgn(x, y) = Asgn(x, y)
 let deref x = Deref x
 let star x = Star
 let nat x = Nat x
+let loc x = Loc x
 
 end

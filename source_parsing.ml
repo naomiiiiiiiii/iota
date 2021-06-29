@@ -48,12 +48,8 @@ let rec term toks =
                              (keycircr "," term)) (*1st term*)
                "(" )
          "bind") >> Source.bind) (*looking for a bind. make bind : exp x exp -> exp*)
-  |:| ((circ (keycircl term "in")
-    (circ (keycircl (keycircl term "ref") "=")
-  
-    (keycircl id "let"))) >> Source.let_ref) (*looking for a ref declaration
-                                         makeref: ((string x exp) x exp) -> exp *)
-  |:| ((circ term (keycircr ":=" id)) >> Source.asgn) (*: (string * exp) -> exp*)
+  |:| ((keycircl atom "ret") >> Source.refe) (*looking for a ref exp *)
+  |:| ((circ term (keycircr ":=" exp)) >> Source.asgn) (*: (string * exp) -> exp*)
   |:| ((keycircl id "!") >> Source.deref)) toks
 and atom toks =  ((id >> Source.free)
                  |:| (keycircr ")" (keycircl term "("))

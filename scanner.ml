@@ -25,7 +25,7 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
 (*PRE: a is a string comprised of alphanumeric characters
   POST: token resulting from scanning a*)
  let alphaTok : string -> token = fun a ->
-   if (MyString.mem Keywords.alpha_num a) then Key(a) else Id(a)
+   if (MyString.exists Keywords.alpha_num a) then Key(a) else Id(a)
 
  let natTok: string -> token = fun a -> try (let nat = int_of_string(a) in
                                              if (nat < 0) then
@@ -41,7 +41,7 @@ POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
     match (MyString.getc rem) with
       None -> (Key(front), rem)
     | Some(head, tail) ->
-      if ((MyString.mem Keywords.symbols front) || (not (MyString.isPunct(head))))
+      if ((MyString.exists Keywords.symbols front) || (not (MyString.isPunct(head))))
       then (Key(front), rem)
       else scan_symbol(front^String.of_char(head), tail)
 

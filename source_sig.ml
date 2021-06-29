@@ -14,14 +14,23 @@ module type SOURCE = sig
   type exp = Free of string
                | Bound of int
                | Star
-               | Nat of int
+           | Nat of int
+           | Loc of int
                | Lam of string * exp
                | Ap of exp * exp
                | Ret of exp
                | Bind of exp * exp
-               | Let_ref of string * exp * exp
-               | Asgn of string * exp
-               | Deref of string
+           | Ref of exp (*modifies store, evaluates to location*)
+           | Asgn of exp * exp (*modifies store, evaluates to unit*)
+         | Deref of exp
+
+  (*iterators*)
+  val traverse: (int -> (string -> exp) * (int -> exp)) -> int -> exp -> exp
+  val fold_expr: (string -> 'a -> 'a) -> (int -> 'a -> 'a) -> 'a
+    exp -> 'a
+
+(*fvars M returns a list of the free vars in M*)
+val fvars: exp -> string list
 
 (* start here: find a natural numbers type so you dont have to keep checking this
 PRE: i >= 0
@@ -52,11 +61,12 @@ one store per PROGRAM (typechecker and evaluator) not one store per language
 val free: string -> exp
 val ret: exp -> exp
 val bind: exp * exp -> exp
-val let_ref: (string * exp) * exp -> exp
-val asgn: string * exp -> exp
-val deref : string -> exp
+val refe:  exp -> exp
+val asgn: exp * exp -> exp
+val deref : exp -> exp
 val star : unit -> exp
 val nat : int -> exp
+val loc : int -> exp
 end
 
 
