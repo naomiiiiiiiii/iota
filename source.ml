@@ -4,26 +4,27 @@ include Core_kernel
 include String_lib
 include Scanner
 include Parser
-include Source_sig 
+include Source_sig
 module MyString = String_lib
 
 let o = Fn.compose
 
 
-let () = Printf.printf "euioeuoieuroeureou \n"
 
 module Source : SOURCE = struct
 type exp = Free of string
-               | Bound of int
-               | Star
-               | Nat of int
-               | Lam of string * exp
-               | Ap of exp * exp
-               | Ret of exp
-               | Bind of exp * exp
-               | Let_ref of string * exp * exp
-               | Asgn of string * exp
-               | Deref of string
+         | Bound of int
+         | Star
+         | Nat of int
+         | Lam of string * exp
+         | Ap of exp * exp
+         | Ret of exp
+         | Bind of exp * exp
+         | Let_ref of string * exp * exp
+         | Asgn of string * exp
+         | Deref of string
+
+
 
 (*a lot of functions regarding exps involve iterating over
   the structure of a term, incrementing some nat argument when you go under a lambda
@@ -80,4 +81,14 @@ let rec inst env  = let bc = fun _ -> (
       and bound = fun j -> Bound j in
       (free, bound))
     in traverse bc 0
+
+let free x = Free x
+let ret x = Ret x
+let bind (x, y) = Bind(x, y)
+let let_ref ((x, y), z) = Let_ref(x, y, z)
+let asgn(x, y) = Asgn(x, y)
+let deref x = Deref x
+let star x = Star
+let nat x = Nat x
+
 end

@@ -33,7 +33,7 @@ let cons (x, l) = x::l
 
   let epsilon toks = ([], toks)
 
-  let (#||) p1 p2 toks = try (p1 toks) with SyntaxErr _ ->
+  let (|:|) p1 p2 toks = try (p1 toks) with SyntaxErr _ ->
     (p2 toks)
 
   let force p = fun toks -> try (p toks) with SyntaxErr msg ->
@@ -52,7 +52,7 @@ let cons (x, l) = x::l
 
   (*if p decreases length of toks then tok is the decreasing argument
   and repeat p toks will terminate*)
-  let rec repeat p toks = (((circ (repeat p) p) >> cons) #|| epsilon) toks
+  let rec repeat p toks = (((circ (repeat p) p) >> cons) |:| epsilon) toks
 
   let reader p s = match (p (Lex.scan_fn s)) with
       (e, []) -> e

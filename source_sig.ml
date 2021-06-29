@@ -3,11 +3,10 @@ include Core
 include Core_kernel
 include String_lib
 include Scanner
-include Parser 
 module MyString = String_lib
+
 let o = Fn.compose
 
-let () = Printf.printf "euioeuoieuroeureou \n"
 
 
 module type SOURCE = sig
@@ -48,7 +47,16 @@ one store per PROGRAM (typechecker and evaluator) not one store per language
 
   (*inst env M instantiates M with the variables defined in environment env*)
   val inst: (string, exp, String.comparator_witness) Map.t -> exp -> exp
-  
+
+(*i can't believe i can't use constructors as functions smh*)
+val free: string -> exp
+val ret: exp -> exp
+val bind: exp * exp -> exp
+val let_ref: (string * exp) * exp -> exp
+val asgn: string * exp -> exp
+val deref : string -> exp
+val star : unit -> exp
+val nat : int -> exp
 end
 
 

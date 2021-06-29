@@ -32,7 +32,7 @@ module type PARSE = sig
   val epsilon : token list -> 'b list * token list
 
   (*POST: join f g a tries f a. if this fails, it returns g a.*)
-  val (#||) : (token list -> 'b) -> (token list -> 'b) -> token list -> 'b
+  val (|:|) : (token list -> 'b) -> (token list -> 'b) -> token list -> 'b
 
   (*POST: force f tries f a. if this fails, it forces toplevel failure.*)
   val force : (token list -> 'b * token list ) -> token list -> 'b * token list
