@@ -20,9 +20,9 @@ module type SOURCE = sig
                | Ap of exp * exp
                | Ret of exp
                | Bind of exp * exp
-               | Let_ref of string * (exp ref) * exp
-               | Asgn of exp * exp
-               | Deref of exp
+               | Let_ref of string * exp * exp
+               | Asgn of string * exp
+               | Deref of string
 
 (* start here: find a natural numbers type so you dont have to keep checking this
 PRE: i >= 0
@@ -39,7 +39,7 @@ absList [x1; ... ; xn] M = \x1, ... xn. M**)
 (*
 PRE: i >= 0
 subst i v M = M[i := v], where i is a bound variable*)
-  val subst : int -> exp list -> exp
+  val subst : int -> exp -> exp -> exp
 
   (*for the references
     val store: (string, exp, String.comparator_witness) Map.t
