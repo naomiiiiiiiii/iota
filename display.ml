@@ -17,11 +17,11 @@ open Lang
 let rec rename bs a =
   if MyString.member bs a then rename  bs (a ^ "'") else a
 
-
+(*make a way to display the types first, then combine newx and tau*)
 let rec strip(bs, m) = match m with
-    Lam(x,t) ->
+    Lam(x, tau, t) ->
     let newx = rename (fvars t) x
-    in strip (newx :: bs, subst 0 (Free newx) t)
+    in strip ((newx, tau) :: bs, subst 0 (Free newx) t)
   | _ -> (List.rev bs, m)
 
 let stripAbs m = strip([], m)
@@ -34,7 +34,7 @@ let spaceJoin b acc = " " ^ b ^ acc
   | Star -> "()"
   | Nat n -> string_of_int(n)
   | Loc n -> "Address: " ^ string_of_int(n) ^ "\n"
-  | Lam _ -> let (b::bs, body) = stripAbs m in
+  | Lam _ -> let ((b, tau)::bs, body) = stripAbs m in
     let front = "\\" ^ b ^ (List.fold_right ~f:spaceJoin ~init:". " bs) in
     front ^ (print_exp body)
   | Ap _ -> print_ap m

@@ -12,10 +12,10 @@ let o = Fn.compose
 
 
 module Source : SOURCE = struct
-  type typ = Nat
+  type typ = Nattp
            | Unit
            | Arr of typ * typ
-           | Ref of typ
+           | Reftp of typ
            | Comp of typ
 
   type exp = Free of string
@@ -126,5 +126,11 @@ let deref x = Deref x
 let star _ = Star
 let nat x = Nat x
 let loc x = Loc x
+let nattp _ = Nattp
+let unittp _ = Unit
+let arr (x, y) = Arr(x, y)
+let reftp x = Reftp(x)
+let comp x = Comp(x)
+
 
 end

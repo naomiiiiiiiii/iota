@@ -11,12 +11,18 @@ let o = Fn.compose
 
 module type SOURCE = sig
 
+  type typ = Nat
+           | Unit
+           | Arr of typ * typ
+           | Ref of typ
+           | Comp of typ
+
   type exp = Free of string
                | Bound of int
                | Star
            | Nat of int
            | Loc of int
-               | Lam of string * exp
+               | Lam of string * typ * exp
                | Ap of exp * exp
                | Ret of exp
                | Bind of exp * exp
@@ -75,6 +81,9 @@ val deref : exp -> exp
 val star : unit -> exp
 val nat : int -> exp
 val loc : int -> exp
+val arr : typ * typ -> typ
+val reftp : typ -> typ
+val comp : typ -> typ
 end
 
 

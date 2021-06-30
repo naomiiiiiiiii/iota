@@ -19,8 +19,8 @@ module type PARSE_TERM = sig
   val read : string -> Source.exp end
 
 module SourceKey : Scanner.KEYWORD = struct
-  let alpha_num = ["ret"; "bind"; "let"; "ref"; "in"]
-  and symbols = ["("; ")"; "\\"; "="; ":="; "!"]
+  let alpha_num = ["ret"; "bind"; "let"; "ref"; "in"; "Nat"; "Unit"; "Ref"; "Comp"]
+  and symbols = ["("; ")"; "\\"; "="; ":="; "!"; "->"]
   and commentl = '['
   and commentr = ']'
 end
@@ -33,12 +33,22 @@ module SourceParsing : Parser_sig.PARSE = Parser.Parsing(SourceLex)
 module ParseTerm : PARSE_TERM = struct
   open SourceParsing
 
+  (*want this to be tok list -> type * tok list*)
+let rec typp toks = ((key "Nat") >> (_ -> Source.Nat)
+             |:| ((key "Unit") >> (_ -> Source.Unit))
+             |:| ((circ (keycircl typp  "->") typp) >> Source.arr)
+             |:| ((keycircl typp "Ref") >> Source.reftp)
+             |:| ((keycircl typp "Comp") >> Source.comp)
+             |:| (keycircr ")" (keycircl typp "("))
+          ) 
+let rec typed_id toks = keycircr ")" (circ typp (keycircr ":" (keycircl id "(")))
 
 let rec term toks =                               
  (((circ term (*look for body of the lambda *)
       ((keycircr "."
           (keycircl
-             (circ (repeat id) id) (*look for all the captured vars*)
+             (circ (repeat typed_id) typed_id) (*look for all the captured vars with
+                                               type annotations*)
              "\\") (*looking for a lambda*)
        ) >> cons) (*collects identifiers into a list*)
    ) >> Source.absList) (*turns list of identifiers and body into a lam*)
