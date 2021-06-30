@@ -33,8 +33,8 @@ module SourceParsing : (Parser_sig.PARSE with type token = SourceLex.token) = Pa
 module ParseTerm : PARSE_TERM = struct
   open SourceParsing
 
-  let constant =  ((natp >> Source.nat)
-                   |:| (starp >> Source.star))
+  let constant =  try ((natp >> Source.nat)
+                   |:| (starp >> Source.star)) with SyntaxErr _ -> raise (SyntaxErr "expected constant")
 
   (*want this to be tok list -> type * tok list*)
 let rec typp (toks: SourceLex.token list) = ((key "Nat") >> (fun _ -> Source.Nattp)
@@ -48,17 +48,20 @@ let rec typp (toks: SourceLex.token list) = ((key "Nat") >> (fun _ -> Source.Nat
                     shows up in 3 places*)
 let typed_id = keycircr ")" (circ typp (keycircr ":" (keycircl id "(")))
 
-let rec term (toks: SourceLex.token list) =                               
- (((circ term (*look for body of the lambda *)
+let singleton a = [a]
+
+let rec term toks =
+  print_endline("running term on " ^ (SourceLex.display_toks toks));
+(((circ term (*look for body of the lambda *)
       ((keycircr "."
-          (keycircl
-             (circ (repeat typed_id) typed_id) (*look for all the captured vars with
+          (keycircl typed_id
+             (*(circ (repeat typed_id) typed_id) look for all the captured vars with
                                                type annotations*)
              "\\") (*looking for a lambda*)
-       ) >> cons) (*collects identifiers into a list*)
+       ) >> singleton) (*collects identifiers into a list*)
    ) >> Source.absList) (*turns list of identifiers and body into a lam*)
-  |:| ((circ (repeat atom) atom) >> Source.applyList) (*single atom or application of atoms*)
-  |:| ((keycircl atom "ret") >> Source.ret) (*looking for a ret. make ret: exp -> exp*)
+ |:| ((circ (repeat atom) atom) >> Source.applyList) (*single atom or application of atoms*)
+ (* |:| ((keycircl atom "ret") >> Source.ret) (*looking for a ret. make ret: exp -> exp*)
   |:| ((keycircl (keycircl (circ (keycircr ")" term) (*2nd term*)
                              (keycircr "," term)) (*1st term*)
                "(" )
@@ -67,12 +70,12 @@ let rec term (toks: SourceLex.token list) =
   |:| ((circ term (keycircr ":=" term)) >> Source.asgn) (*: (exp * exp) -> exp*)
   |:| ((keycircl atom "!") >> Source.deref)
  |:| constant
- ) toks
+    )*) ) toks
 and atom toks =  ((id >> Source.free)
                   |:| (keycircr ")" (keycircl term "("))
                  |:| constant) toks
                  
-let read s = match constant (SourceLex.scan s) with
+let read s = match term (SourceLex.scan s) with
     (m, []) -> m
   | (_, _::_) -> raise (SyntaxErr "Extra characters in phrase")
     end

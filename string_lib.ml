@@ -12,10 +12,11 @@ let isGraph c = Char.is_print(c) && (not (Char.is_whitespace(c)))
 
 let isPunct c = isGraph(c) && (not (Char.is_alphanum c))
 
-(*PRE: s = front ++ back where front is the largest prefix st for all c in front, f c = true
+(*
+PRE: s = front ++ back where front is the largest prefix st for all c in front, f c = true
   POST: returns (front, back)*)
-let partition f s = let front = String.rstrip ~drop:(o not f) s and
-  back = String.lstrip ~drop:f s in (front, back)
+let split_while f s = let (front, back) = List.split_while ~f:f (String.to_list s) in
+  ((String.of_char_list front), (String.of_char_list back))
 
 (*PRE: s = front ++ c1 ++ back for nonempty front 
 POST: returns back*)

@@ -16,11 +16,20 @@ module type LEXICAL = sig
   type token = Id of string | Key of string | Nat of int | Star
 (*put unsigned int from here if you ever use it https://opam.ocaml.org/packages/stdint/*)
   val scan: string -> token list
+val display_toks : token list -> string
 end
 
 
 module Lexical (Keywords: KEYWORD) : LEXICAL = struct
   type token = Id of string | Key of string | Nat of int | Star
+
+  let display_tok t = match t with
+      Id s -> " id~" ^ s ^ (String.of_char '\n')
+    | Key s -> " key~" ^ s ^ (String.of_char '\n')
+    | Nat n -> string_of_int(n)
+    | Star -> "star"
+
+  let display_toks l = String.concat (List.map ~f:display_tok l)
 
 (*PRE: a is a string comprised of alphanumeric characters
   POST: token resulting from scanning a*)
@@ -28,11 +37,10 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
    if (MyString.member Keywords.alpha_num a) then Key(a) else Id(a)
 
  let natTok a =
-   (print_endline ("in natok with " ^ a));
    try (let nat = int_of_string(a) in
                                              if (nat < 0) then
                                                (raise (Failure "Nats cannot be negative!"))
-                                             else (print_endline ("accepting " ^ a)); (Nat nat))
+                                             else (Nat nat))
    with Failure error -> raise (Failure (error^" in NatTok"))
 
 (*TYPE: scan_symbol: string x string -> token x string
@@ -53,17 +61,16 @@ PRE: toks is list of tokens already scanned (read from right to left),
 POST: ouputs a list containing (the tokens from toks, then the tokens scanned from s)
   read from left to right *)
   let rec scan_help toks s =
-    (print_endline ("scanning :" ^ s) );
     match (MyString.getc s) with
-      None -> (print_endline "no chars"); List.rev toks
-    | Some(head, tail) -> (print_endline ("head is "^(Char.to_string head))); let (newtoks, news) =
+      None ->  List.rev toks
+    | Some(head, tail) -> let (newtoks, news) =
       if (Char.equal head Keywords.commentl)
       then (toks, MyString.dropl_char tail Keywords.commentr "unclosed comment")
       else if Char.is_alpha(head) (*identifier or keyword*)
-      then let (id, rem) = MyString.partition (Char.is_alphanum) s in
+      then let (id, rem) = MyString.split_while Char.is_alphanum s in
         (alphaTok(id)::toks, rem)
       else if Char.is_digit(head) (*number*)
-      then let (num, rem) = MyString.partition (Char.is_digit) s in
+      then let (num, rem) = MyString.split_while Char.is_digit s in
         (natTok(num)::toks, rem)
       else if MyString.isPunct(head) (*special symbol*)
       then let (tok, rem)= scan_symbol(String.of_char(head), tail) in

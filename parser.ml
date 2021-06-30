@@ -27,8 +27,8 @@ let cons (x, l) = x::l
       else raise (SyntaxErr ("expected keyword " ^ k ^ " got keyword "^k0))
     | _ -> raise (SyntaxErr ("expected keyword " ^ k))
 
-  let natp toks = (print_endline "in nat"); match toks with
-      (Lex.Nat n::rem) -> (print_endline "accepting in nat"); (n, rem)
+  let natp toks = match toks with
+      (Lex.Nat n::rem) -> (n, rem)
     | _  -> raise (SyntaxErr ("expected nat")) 
 
 
@@ -38,8 +38,7 @@ let cons (x, l) = x::l
 
   let epsilon toks = ([], toks)
 
-  let (|:|) p1 p2 toks = try ((print_endline "in or p1");
-                                p1 toks) with SyntaxErr _ ->
+  let (|:|) p1 p2 toks = try (p1 toks) with SyntaxErr _ ->
     (p2 toks)
 
   let force p = fun toks -> try (p toks) with SyntaxErr msg ->
@@ -58,7 +57,9 @@ let cons (x, l) = x::l
 
   (*if p decreases length of toks then tok is the decreasing argument
   and repeat p toks will terminate*)
-  let rec repeat p toks = (((circ (repeat p) p) >> cons) |:| epsilon) toks
+  let rec repeat p toks = (epsilon |:| epsilon) toks
+
+  (* (((circ (repeat p) p) >> cons) |:| epsilon) toks*)
 
   let reader p s = match (p (Lex.scan s)) with
       (e, []) -> e
