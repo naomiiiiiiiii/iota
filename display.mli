@@ -10,5 +10,6 @@ val rename : string list -> string -> string
    and its body*)
 val stripAbs : Lang.exp -> string list * Lang.exp
 
-(*val printer : exp -> unit*)
+(*prints to stdout*)
+val printer : Lang.exp -> unit
 

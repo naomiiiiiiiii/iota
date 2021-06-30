@@ -30,7 +30,7 @@ module SourceLex : Scanner.LEXICAL = Scanner.Lexical(SourceKey)
 module SourceParsing : Parser_sig.PARSE = Parser.Parsing(SourceLex)
 
 
-module ParseTerm = struct
+module ParseTerm : PARSE_TERM = struct
   open SourceParsing
 
 
@@ -55,4 +55,8 @@ and atom toks =  ((id >> Source.free)
                  |:| (keycircr ")" (keycircl term "("))
                  |:| (natp >> Source.nat)
                  |:| (starp >> Source.star)) toks (*: unit -> exp*)
+
+let read s = match term (SourceLex.scan a) with
+    (m, []) -> m
+  | (_, _::_) -> raise SyntaxErr "Extra characters in phrase"
     end

@@ -10,8 +10,6 @@ module MyString = String_lib
 
 let o = Fn.compose
 
-let () = Printf.printf "hoog \n"
-
 module Lang = Source
 
 open Lang
@@ -40,19 +38,20 @@ let spaceJoin b acc = " " ^ b ^ acc
     let front = "\\" ^ b ^ (List.fold_right ~f:spaceJoin ~init:". " bs) in
     front ^ (print_exp body)
   | Ap _ -> print_ap m
-  | Ret(m0) -> "ret" ^ (atom m0)
+  | Ret(m0) -> "ret" ^ (print_atom m0)
   | Bind(m1, m2) -> "bind(" ^ (print_exp m1) ^ "," ^ (print_exp m2) ^ ")"
-  | Ref(v) -> "ref" ^ (atom v)
-  | Asgn(r, e) -> (atom r) ^ ":=" ^ (print_exp e)
-  | Deref r -> "!"^(atom r)
+  | Ref(v) -> "ref" ^ (print_atom v)
+  | Asgn(r, e) -> (print_atom r) ^ ":=" ^ (print_exp e)
+  | Deref r -> "!"^(print_atom r)
 and print_ap m = match m with (*once print_app is entered all terms
                                that aren't simply identifiers will be
                                  wrapped in parens,
                               identifiers will have a space put in front*)
-    Ap(m1, m2) -> (print_ap m1) ^ (atom m2)
-  | _ -> atom m
-and atom m = match m with
+    Ap(m1, m2) -> (print_ap m1) ^ (print_atom m2)
+  | _ -> print_atom m
+and print_atom m = match m with
     Free(a) -> " "^a
   | _ -> "(" ^ (print_exp m) ^ ")"
 
 
+let printer m = print_endline(print_exp m)

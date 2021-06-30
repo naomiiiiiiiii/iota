@@ -12,12 +12,18 @@ let o = Fn.compose
 
 
 module Source : SOURCE = struct
-type exp = Free of string
+  type typ = Nat
+           | Unit
+           | Arr of typ * typ
+           | Ref of typ
+           | Comp of typ
+
+  type exp = Free of string
          | Bound of int
          | Star
          | Nat of int
          | Loc of int
-         | Lam of string * exp
+         | Lam of string * typ * exp
          | Ap of exp * exp
          | Ret of exp
          | Bind of exp * exp
@@ -43,7 +49,7 @@ let rec traverse (bc: int -> (string -> exp) * (int -> exp)) (start: int): exp -
   | Star -> m
   | Nat _ -> m
   | Loc _ -> m
-  | Lam (y, m') -> Lam(y, (traverse_b (start + 1)) m')
+  | Lam (y, t, m') -> Lam(y, t, (traverse_b (start + 1)) m')
   | Ap(m1, m2) -> Ap((traverse_b start m1), (traverse_b start m2))
   | Ret(m0) -> Ret(traverse_b start m0)
   | Bind(m1, m2) -> Bind((traverse_b start m1), (traverse_b (start + 1) m2))
@@ -53,7 +59,7 @@ let rec traverse (bc: int -> (string -> exp) * (int -> exp)) (start: int): exp -
 
 (*folds accross an expression from the most nested part (rightmost part) upwards*)
 let rec fold_expr (bc1: string -> 'a -> 'a) (bc2: int -> 'a -> 'a) (start: 'a): exp -> 'a
-  = fun m ->
+   = fun m ->
     let foldbc = fold_expr bc1 bc2 in
     match m with
     Free a -> bc1 a start
@@ -61,7 +67,7 @@ let rec fold_expr (bc1: string -> 'a -> 'a) (bc2: int -> 'a -> 'a) (start: 'a): 
   | Star -> start
   | Nat _ -> start
   | Loc _ -> start
-  | Lam (_, m') -> foldbc start m'
+  | Lam (_, _, m') -> foldbc start m'
   | Ap(m1, m2) -> foldbc (foldbc start m2) m1
   | Ret(m0) -> foldbc start m0
   | Bind(m1, m2) -> foldbc (foldbc start m2) m1

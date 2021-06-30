@@ -24,6 +24,13 @@ module type SOURCE = sig
            | Asgn of exp * exp (*modifies store, evaluates to unit*)
          | Deref of exp
 
+  type typ = Nat
+           | Unit
+           | Arr of typ * typ
+           | Ref of typ
+           | Comp of typ
+
+
   (*iterators*)
   val traverse: (int -> (string -> exp) * (int -> exp)) -> int -> exp -> exp
   val fold_expr: (string -> 'a -> 'a) -> (int -> 'a -> 'a) -> 'a -> exp -> 'a
@@ -42,7 +49,7 @@ absList [x1; ... ; xn] M = \x1, ... xn. M**)
 
 (*applyList (M, [M1; ... ; Mn]) = M M1 ... Mn*)
   val applyList : exp * exp list -> exp
-
+ 
 (*
 PRE: i >= 0
 subst i v M = M[i := v], where i is a bound variable*)
@@ -55,6 +62,8 @@ one store per PROGRAM (typechecker and evaluator) not one store per language
 
   (*inst env M instantiates M with the variables defined in environment env*)
   val inst: (string, exp, String.comparator_witness) Map.t -> exp -> exp
+
+
 
 (*i can't believe i can't use constructors as functions smh*)
 val free: string -> exp

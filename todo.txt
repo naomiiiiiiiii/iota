@@ -1,2 +1,4 @@
+make display a functor?!
+
 keycircl and keycircr are tptally backwards
 change source to lang so that display.mli is less confusing?
