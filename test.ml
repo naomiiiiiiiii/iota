@@ -19,7 +19,6 @@ let testexp = Bind(Free("1starg"), Lam(("aa", Nattp), Bound(0)))
 
 let test1 = "\\x.ret(x)"
 
-(*let v = printer testexp
-let v1 = printer (read test1)
+let v = printer testexp
+let v1 = printer (ParseTerm.read test1)
 
-*)
