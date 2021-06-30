@@ -37,7 +37,7 @@ let rec strip(bs, m) = match m with
 
 let stripAbs m = strip([], m)
 
-let spaceJoin b acc = " " ^ b ^ acc
+(*let spaceJoin b acc = " " ^ b ^ acc*)
 
   let rec exp_to_string m = match m with
     Free a -> a
@@ -45,8 +45,8 @@ let spaceJoin b acc = " " ^ b ^ acc
   | Star -> "()"
   | Nat n -> string_of_int(n)
   | Loc n -> "Address: " ^ string_of_int(n) ^ "\n"
-  | Lam _ -> let (b::bs, body) = stripAbs m in
-    let front = "\\" ^ b ^ (List.fold_right ~f:spaceJoin ~init:". " bs) in
+  | Lam _ -> let (bs, body) = stripAbs m in
+    let front = "\\" ^ (String.concat bs) ^ "." in
     front ^ (exp_to_string body)
   | Ap _ -> ap_to_string m
   | Ret(m0) -> "ret" ^ (atom_to_string m0)
@@ -58,10 +58,10 @@ and ap_to_string m = match m with (*once ap_to_stringp is entered all terms
                                that aren't simply identifiers will be
                                  wrapped in parens,
                               identifiers will have a space put in front*)
-    Ap(m1, m2) -> (ap_to_string m1) ^ (atom_to_string m2)
+    Ap(m1, m2) -> (ap_to_string m1) ^ " " ^ (atom_to_string m2)
   | _ -> atom_to_string m
 and atom_to_string m = match m with
-    Free(a) -> " "^a
+    Free(a) -> a
   | _ -> "(" ^ (exp_to_string m) ^ ")"
 
 

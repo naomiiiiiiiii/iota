@@ -33,7 +33,7 @@ let cons (x, l) = x::l
 
 
   let starp toks = match toks with
-      (Lex.Star::rem) -> ((), rem)
+      (Lex.Key"("::Lex.Key")"::rem) -> ((), rem)
     | _  -> raise (SyntaxErr ("expected unit")) 
 
   let epsilon toks = ([], toks)

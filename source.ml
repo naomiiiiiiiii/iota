@@ -91,7 +91,7 @@ let abstract i x = let bc = fun i -> (
 
 let absList (l, m) = List.fold_right l ~f:(fun x -> fun m0 -> Lam(x, (abstract 0 (fst x) m0))) ~init:m
 
-let applyList (m0, ms) = List.fold_left ms ~f:(fun mn -> fun bigapp -> Ap(bigapp, mn)) ~init:m0
+let applyList (m0, ms) = List.fold_left ms ~f:(fun bigapp -> fun mn -> Ap(bigapp, mn)) ~init:m0
 
 (*shift i dot m shifts m's bound variables up by i, only ignoring variables <= dot*)
 let shift i dot = let bc = fun dots -> (
@@ -127,7 +127,7 @@ let star _ = Star
 let nat x = Nat x
 let loc x = Loc x
 let arr (x, y) = Arr(x, y)
-let reftp x = print_endline("in reftp"); Reftp(x)
+let reftp x = Reftp(x)
 let comp x = Comp(x)
 
 

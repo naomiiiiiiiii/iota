@@ -13,7 +13,7 @@ module type KEYWORD = sig
 end
 
 module type LEXICAL = sig
-  type token = Id of string | Key of string | Nat of int | Star
+  type token = Id of string | Key of string | Nat of int
 (*put unsigned int from here if you ever use it https://opam.ocaml.org/packages/stdint/*)
   val scan: string -> token list
 val display_toks : token list -> string
@@ -21,13 +21,12 @@ end
 
 
 module Lexical (Keywords: KEYWORD) : LEXICAL = struct
-  type token = Id of string | Key of string | Nat of int | Star
+  type token = Id of string | Key of string | Nat of int
 
   let display_tok t = match t with
       Id s -> " id~" ^ s ^ (String.of_char '\n')
     | Key s -> " key~" ^ s ^ (String.of_char '\n')
     | Nat n -> string_of_int(n)
-    | Star -> "star"
 
   let display_toks l = String.concat (List.map ~f:display_tok l)
 
