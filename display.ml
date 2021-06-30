@@ -14,7 +14,7 @@ module Lang = Source
 
 open Lang
 
-let rec type_to_string tau = function
+let rec type_to_string = function
     Nattp -> "Nat"
   | Unit -> "Unit"
   | Arr(t1, t2) -> (type_to_string t1) ^ "->" ^ (type_to_string t2)
@@ -26,9 +26,9 @@ let rec rename bs a =
   if MyString.member bs a then rename  bs (a ^ "'") else a
 
 let rec strip(bs, m) = match m with
-    Lam(x, tau, t) ->
+    Lam((x, tau), t) ->
     let newx = rename (fvars t) x in
-        let x_annote =  "(" ^ newx ^ ":" ^ (type_to_string tau) ")"
+        let x_annot =  "(" ^ newx ^ ":" ^ (type_to_string tau) ^ ")"
     in strip (x_annot :: bs, subst 0 (Free newx) t)
   | _ -> (List.rev bs, m)
 

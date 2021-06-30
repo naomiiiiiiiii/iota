@@ -27,25 +27,25 @@ end
 
 module SourceLex : Scanner.LEXICAL = Scanner.Lexical(SourceKey)
 
-module SourceParsing : Parser_sig.PARSE = Parser.Parsing(SourceLex)
+module SourceParsing : (Parser_sig.PARSE with type token = SourceLex.token) = Parser.Parsing(SourceLex)
 
 
 module ParseTerm : PARSE_TERM = struct
   open SourceParsing
 
   (*want this to be tok list -> type * tok list*)
-let rec typp toks = ((key "Nat") >> (_ -> Source.Nat)
-             |:| ((key "Unit") >> (_ -> Source.Unit))
+let rec typp (toks: SourceLex.token list) = ((key "Nat") >> (fun _ -> Source.Nattp)
+             |:| ((key "Unit") >> (fun _ -> Source.Unit))
              |:| ((circ (keycircl typp  "->") typp) >> Source.arr)
              |:| ((keycircl typp "Ref") >> Source.reftp)
              |:| ((keycircl typp "Comp") >> Source.comp)
              |:| (keycircr ")" (keycircl typp "("))
-                    )
+                    ) toks
                     (*start here automate the surrounded by parens thing,
                     shows up in 3 places*)
-let rec typed_id toks = keycircr ")" (circ typp (keycircr ":" (keycircl id "(")))
+let typed_id = keycircr ")" (circ typp (keycircr ":" (keycircl id "(")))
 
-let rec term toks =                               
+let rec term (toks: SourceLex.token list) =                               
  (((circ term (*look for body of the lambda *)
       ((keycircr "."
           (keycircl
@@ -60,15 +60,15 @@ let rec term toks =
                              (keycircr "," term)) (*1st term*)
                "(" )
          "bind") >> Source.bind) (*looking for a bind. make bind : exp x exp -> exp*)
-  |:| ((keycircl atom "ret") >> Source.refe) (*looking for a ref exp *)
-  |:| ((circ term (keycircr ":=" exp)) >> Source.asgn) (*: (string * exp) -> exp*)
-  |:| ((keycircl id "!") >> Source.deref)) toks
+  |:| ((keycircl atom "ref") >> Source.refexp) (*looking for a ref exp *)
+  |:| ((circ term (keycircr ":=" term)) >> Source.asgn) (*: (exp * exp) -> exp*)
+  |:| ((keycircl atom "!") >> Source.deref)) toks
 and atom toks =  ((id >> Source.free)
                  |:| (keycircr ")" (keycircl term "("))
                  |:| (natp >> Source.nat)
                  |:| (starp >> Source.star)) toks (*: unit -> exp*)
 
-let read s = match term (SourceLex.scan a) with
+let read s = match term (SourceLex.scan s) with
     (m, []) -> m
-  | (_, _::_) -> raise SyntaxErr "Extra characters in phrase"
+  | (_, _::_) -> raise (SyntaxErr "Extra characters in phrase")
     end

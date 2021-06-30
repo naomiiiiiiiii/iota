@@ -11,10 +11,10 @@ let o = Fn.compose
 
 module type SOURCE = sig
 
-  type typ = Nat
+  type typ = Nattp
            | Unit
            | Arr of typ * typ
-           | Ref of typ
+           | Reftp of typ
            | Comp of typ
 
   type exp = Free of string
@@ -22,20 +22,13 @@ module type SOURCE = sig
                | Star
            | Nat of int
            | Loc of int
-               | Lam of string * typ * exp
+               | Lam of (string * typ) * exp
                | Ap of exp * exp
                | Ret of exp
                | Bind of exp * exp
            | Ref of exp (*modifies store, evaluates to location*)
            | Asgn of exp * exp (*modifies store, evaluates to unit*)
          | Deref of exp
-
-  type typ = Nat
-           | Unit
-           | Arr of typ * typ
-           | Ref of typ
-           | Comp of typ
-
 
   (*iterators*)
   val traverse: (int -> (string -> exp) * (int -> exp)) -> int -> exp -> exp
@@ -51,7 +44,7 @@ POST: abstract i x M will turn all free occurences of x into the bound variable 
 
 (*
 absList [x1; ... ; xn] M = \x1, ... xn. M**)
-  val absList : string list * exp -> exp
+  val absList : (string * typ) list * exp -> exp
 
 (*applyList (M, [M1; ... ; Mn]) = M M1 ... Mn*)
   val applyList : exp * exp list -> exp

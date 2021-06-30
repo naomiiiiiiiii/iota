@@ -7,14 +7,18 @@ include Parser_sig
 module MyString = String_lib
 let o = Fn.compose
 
-module Parsing (Lex: LEXICAL): PARSE = struct
-  type token = Lex.token
-  exception SyntaxErr of string
+module Parsing (Lex: LEXICAL): (Parser_sig.PARSE with type token = Lex.token) = struct
+
+
+type token = Lex.token
+
+exception SyntaxErr of string
   exception SyntaxErr_imeanitthistime of string
 
+  (*module Lex = Lex*)
 let cons (x, l) = x::l
 
-  let id toks = match toks with
+  let id (toks: Lex.token list) = match toks with
       (Lex.Id s :: rem) -> (s, rem)
     | _ -> raise (SyntaxErr "expected identifier\n")
 
@@ -43,7 +47,7 @@ let cons (x, l) = x::l
   let (>>) p f = fun toks -> let (x, rem) = (p toks) in
     (f x, rem)
 
-  let circ p2 p1 = fun toks -> let (v1, toks1) = (p1 toks) in
+  let circ (p2: Lex.token list -> 'd * Lex.token list) p1 = fun toks -> let (v1, toks1) = (p1 toks) in
     let (v2, toks2) = (p2 toks1) in
     ((v1, v2), toks2)
 
@@ -55,7 +59,7 @@ let cons (x, l) = x::l
   and repeat p toks will terminate*)
   let rec repeat p toks = (((circ (repeat p) p) >> cons) |:| epsilon) toks
 
-  let reader p s = match (p (Lex.scan_fn s)) with
+  let reader p s = match (p (Lex.scan s)) with
       (e, []) -> e
     | _ -> raise (SyntaxErr ("Extra chars in phrase "^s^"\n"))
 end

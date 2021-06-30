@@ -15,7 +15,7 @@ end
 module type LEXICAL = sig
   type token = Id of string | Key of string | Nat of int | Star
 (*put unsigned int from here if you ever use it https://opam.ocaml.org/packages/stdint/*)
-  val scan_fn: string -> token list
+  val scan: string -> token list
 end
 
 
@@ -50,7 +50,7 @@ PRE: toks is list of tokens already scanned (read from right to left),
   s is string remaining to be scanned
 POST: ouputs a list containing (the tokens from toks, then the tokens scanned from s)
   read from left to right *)
-  let rec scan_fn_help toks s =
+  let rec scan_help toks s =
     match (MyString.getc s) with
       None -> List.rev toks
     | Some(head, tail) -> let (newtoks, news) =
@@ -66,9 +66,9 @@ POST: ouputs a list containing (the tokens from toks, then the tokens scanned fr
       then let (tok, rem)= scan_symbol(String.of_char(head), tail) in
         (tok::toks, rem)
       else (toks, (String.lstrip ~drop:(o not MyString.isGraph) s))
-        in scan_fn_help newtoks news
+        in scan_help newtoks news
 (*scan_symbol can do symbols of length > 1 and takes in a rem, come back here and fix comments*)
-  let scan_fn = scan_fn_help []
+  let scan = scan_help []
 
 end
 

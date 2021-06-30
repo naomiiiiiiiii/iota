@@ -23,7 +23,7 @@ module Source : SOURCE = struct
          | Star
          | Nat of int
          | Loc of int
-         | Lam of string * typ * exp
+         | Lam of (string * typ) * exp
          | Ap of exp * exp
          | Ret of exp
          | Bind of exp * exp
@@ -49,7 +49,7 @@ let rec traverse (bc: int -> (string -> exp) * (int -> exp)) (start: int): exp -
   | Star -> m
   | Nat _ -> m
   | Loc _ -> m
-  | Lam (y, t, m') -> Lam(y, t, (traverse_b (start + 1)) m')
+  | Lam (p, m') -> Lam(p, (traverse_b (start + 1)) m')
   | Ap(m1, m2) -> Ap((traverse_b start m1), (traverse_b start m2))
   | Ret(m0) -> Ret(traverse_b start m0)
   | Bind(m1, m2) -> Bind((traverse_b start m1), (traverse_b (start + 1) m2))
@@ -67,7 +67,7 @@ let rec fold_expr (bc1: string -> 'a -> 'a) (bc2: int -> 'a -> 'a) (start: 'a): 
   | Star -> start
   | Nat _ -> start
   | Loc _ -> start
-  | Lam (_, _, m') -> foldbc start m'
+  | Lam (_, m') -> foldbc start m'
   | Ap(m1, m2) -> foldbc (foldbc start m2) m1
   | Ret(m0) -> foldbc start m0
   | Bind(m1, m2) -> foldbc (foldbc start m2) m1
@@ -89,7 +89,7 @@ let abstract i x = let bc = fun i -> (
     in
     traverse bc i
 
-let absList (l, m) = List.fold_right l ~f:(fun x -> fun m0 -> Lam(x, (abstract 0 x m0))) ~init:m
+let absList (l, m) = List.fold_right l ~f:(fun x -> fun m0 -> Lam(x, (abstract 0 (fst x) m0))) ~init:m
 
 let applyList (m0, ms) = List.fold_left ms ~f:(fun mn -> fun bigapp -> Ap(bigapp, mn)) ~init:m0
 
@@ -126,8 +126,6 @@ let deref x = Deref x
 let star _ = Star
 let nat x = Nat x
 let loc x = Loc x
-let nattp _ = Nattp
-let unittp _ = Unit
 let arr (x, y) = Arr(x, y)
 let reftp x = Reftp(x)
 let comp x = Comp(x)
