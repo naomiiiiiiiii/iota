@@ -127,7 +127,7 @@ let star _ = Star
 let nat x = Nat x
 let loc x = Loc x
 let arr (x, y) = Arr(x, y)
-let reftp x = Reftp(x)
+let reftp x = print_endline("in reftp"); Reftp(x)
 let comp x = Comp(x)
 
 

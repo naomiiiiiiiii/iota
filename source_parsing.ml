@@ -36,16 +36,21 @@ module ParseTerm : PARSE_TERM = struct
   let constant =  try ((natp >> Source.nat)
                    |:| (starp >> Source.star)) with SyntaxErr _ -> raise (SyntaxErr "expected constant")
 
+  let constant_typ =  try (((key "Nat") >> (fun _ -> Source.Nattp))
+                           |:| ((key "Unit") >> (fun _ -> Source.Unit))) with SyntaxErr _ -> raise
+                                                                             (SyntaxErr "expected constant type")
   (*want this to be tok list -> type * tok list*)
-let rec typp (toks: SourceLex.token list) = ((key "Nat") >> (fun _ -> Source.Nattp)
-             |:| ((key "Unit") >> (fun _ -> Source.Unit))
-             |:| ((circ (keycircl typp  "->") typp) >> Source.arr)
-             |:| ((keycircl typp "Ref") >> Source.reftp)
-             |:| ((keycircl typp "Comp") >> Source.comp)
-             |:| (keycircr ")" (keycircl typp "("))
-                    ) toks
+let rec typp (toks: SourceLex.token list) =
+  print_endline("running typ on " ^ (SourceLex.display_toks toks));
+  ((atom_typp
+    |:| ((circ (keycircl atom_typp  "->") atom_typp) >> Source.arr)
+    |:| ((keycircl typp "Ref") >> Source.reftp)
+    |:| ((keycircl typp "Comp") >> Source.comp)
+   ) toks)
                     (*start here automate the surrounded by parens thing,
                     shows up in 3 places*)
+and atom_typp toks = ((keycircr ")" (keycircl typp "("))
+                    |:| constant_typ) toks
 let typed_id = keycircr ")" (circ typp (keycircr ":" (keycircl id "(")))
 
 let singleton a = [a]
@@ -69,7 +74,6 @@ let rec term toks =
   |:| ((keycircl atom "ref") >> Source.refexp) (*looking for a ref exp *)
   |:| ((circ term (keycircr ":=" term)) >> Source.asgn) (*: (exp * exp) -> exp*)
   |:| ((keycircl atom "!") >> Source.deref)
- |:| constant
     ) toks
 and atom toks =  ((id >> Source.free)
                   |:| (keycircr ")" (keycircl term "("))
