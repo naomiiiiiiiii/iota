@@ -10,7 +10,10 @@ module MyString = String_lib
 
 let o = Fn.compose
 
-module Lang = Source
+module Display (Lang: Source_sig.SOURCE) : (Display_sig.DISPLAY with type exp = Lang.exp
+                                                                 and type typ = Lang.typ) = struct
+  type exp= Lang.exp
+  type typ = Lang.typ
 
 open Lang
 
@@ -63,3 +66,5 @@ and atom_to_string m = match m with
 
 
 let printer m = print_endline(exp_to_string m)
+
+end
