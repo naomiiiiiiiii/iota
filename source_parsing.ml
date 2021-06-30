@@ -40,7 +40,9 @@ let rec typp toks = ((key "Nat") >> (_ -> Source.Nat)
              |:| ((keycircl typp "Ref") >> Source.reftp)
              |:| ((keycircl typp "Comp") >> Source.comp)
              |:| (keycircr ")" (keycircl typp "("))
-          ) 
+                    )
+                    (*start here automate the surrounded by parens thing,
+                    shows up in 3 places*)
 let rec typed_id toks = keycircr ")" (circ typp (keycircr ":" (keycircl id "(")))
 
 let rec term toks =                               
