@@ -38,6 +38,9 @@ let rec strip(bs, m) = match m with
 let stripAbs m = strip([], m)
 
 (*let spaceJoin b acc = " " ^ b ^ acc*)
+let constant = function
+  | Nat _ | Loc _ | Star -> true
+  | _ -> false
 
   let rec exp_to_string m = match m with
     Free a -> a
@@ -62,6 +65,7 @@ and ap_to_string m = match m with (*once ap_to_stringp is entered all terms
   | _ -> atom_to_string m
 and atom_to_string m = match m with
     Free(a) -> a
+  |  _ when (constant m) -> (exp_to_string m)
   | _ -> "(" ^ (exp_to_string m) ^ ")"
 
 
