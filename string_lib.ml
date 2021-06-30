@@ -3,7 +3,7 @@ include Core
 include Core_kernel
 
 let o = Fn.compose
-let getc = fun s -> try Some ((String.get s 1), (String.drop_prefix s 1))
+let getc = fun s -> try Some ((String.get s 0), (String.drop_prefix s 1))
   with Invalid_argument _ -> None
 
 let member l s = List.mem l s ~equal:String.equal

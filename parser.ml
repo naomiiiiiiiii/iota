@@ -24,21 +24,22 @@ let cons (x, l) = x::l
 
   let key k toks = match toks with
       (Lex.Key k0 :: rem) -> if (String.equal k k0) then (k, rem)
-      else raise (SyntaxErr ("expected keyword "^k^" got keyword "^k0^"\n"))
-    | _ -> raise (SyntaxErr ("expected keyword "^k^"\n"))
+      else raise (SyntaxErr ("expected keyword " ^ k ^ " got keyword "^k0))
+    | _ -> raise (SyntaxErr ("expected keyword " ^ k))
 
-  let natp toks = match toks with
-      (Lex.Nat n::rem) -> (n, rem)
-    | _  -> raise (SyntaxErr ("expected nat\n")) 
+  let natp toks = (print_endline "in nat"); match toks with
+      (Lex.Nat n::rem) -> (print_endline "accepting in nat"); (n, rem)
+    | _  -> raise (SyntaxErr ("expected nat")) 
 
 
   let starp toks = match toks with
       (Lex.Star::rem) -> ((), rem)
-    | _  -> raise (SyntaxErr ("expected unit\n")) 
+    | _  -> raise (SyntaxErr ("expected unit")) 
 
   let epsilon toks = ([], toks)
 
-  let (|:|) p1 p2 toks = try (p1 toks) with SyntaxErr _ ->
+  let (|:|) p1 p2 toks = try ((print_endline "in or p1");
+                                p1 toks) with SyntaxErr _ ->
     (p2 toks)
 
   let force p = fun toks -> try (p toks) with SyntaxErr msg ->
@@ -53,7 +54,7 @@ let cons (x, l) = x::l
 
   let keycircl p k = (circ (force p) (key k)) >> snd
 
-  let keycircr k p = (circ (key k) (force p)) >> fst
+  let keycircr k p = (circ (key k) p) >> fst
 
   (*if p decreases length of toks then tok is the decreasing argument
   and repeat p toks will terminate*)

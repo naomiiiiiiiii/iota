@@ -33,6 +33,9 @@ module SourceParsing : (Parser_sig.PARSE with type token = SourceLex.token) = Pa
 module ParseTerm : PARSE_TERM = struct
   open SourceParsing
 
+  let constant =  ((natp >> Source.nat)
+                   |:| (starp >> Source.star))
+
   (*want this to be tok list -> type * tok list*)
 let rec typp (toks: SourceLex.token list) = ((key "Nat") >> (fun _ -> Source.Nattp)
              |:| ((key "Unit") >> (fun _ -> Source.Unit))
@@ -62,13 +65,14 @@ let rec term (toks: SourceLex.token list) =
          "bind") >> Source.bind) (*looking for a bind. make bind : exp x exp -> exp*)
   |:| ((keycircl atom "ref") >> Source.refexp) (*looking for a ref exp *)
   |:| ((circ term (keycircr ":=" term)) >> Source.asgn) (*: (exp * exp) -> exp*)
-  |:| ((keycircl atom "!") >> Source.deref)) toks
+  |:| ((keycircl atom "!") >> Source.deref)
+ |:| constant
+ ) toks
 and atom toks =  ((id >> Source.free)
-                 |:| (keycircr ")" (keycircl term "("))
-                 |:| (natp >> Source.nat)
-                 |:| (starp >> Source.star)) toks (*: unit -> exp*)
-
-let read s = match term (SourceLex.scan s) with
+                  |:| (keycircr ")" (keycircl term "("))
+                 |:| constant) toks
+                 
+let read s = match constant (SourceLex.scan s) with
     (m, []) -> m
   | (_, _::_) -> raise (SyntaxErr "Extra characters in phrase")
     end

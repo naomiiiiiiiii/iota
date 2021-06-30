@@ -27,10 +27,12 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
  let alphaTok : string -> token = fun a ->
    if (MyString.member Keywords.alpha_num a) then Key(a) else Id(a)
 
- let natTok: string -> token = fun a -> try (let nat = int_of_string(a) in
+ let natTok a =
+   (print_endline ("in natok with " ^ a));
+   try (let nat = int_of_string(a) in
                                              if (nat < 0) then
                                                (raise (Failure "Nats cannot be negative!"))
-                                             else (Nat nat))
+                                             else (print_endline ("accepting " ^ a)); (Nat nat))
    with Failure error -> raise (Failure (error^" in NatTok"))
 
 (*TYPE: scan_symbol: string x string -> token x string
@@ -51,9 +53,10 @@ PRE: toks is list of tokens already scanned (read from right to left),
 POST: ouputs a list containing (the tokens from toks, then the tokens scanned from s)
   read from left to right *)
   let rec scan_help toks s =
+    (print_endline ("scanning :" ^ s) );
     match (MyString.getc s) with
-      None -> List.rev toks
-    | Some(head, tail) -> let (newtoks, news) =
+      None -> (print_endline "no chars"); List.rev toks
+    | Some(head, tail) -> (print_endline ("head is "^(Char.to_string head))); let (newtoks, news) =
       if (Char.equal head Keywords.commentl)
       then (toks, MyString.dropl_char tail Keywords.commentr "unclosed comment")
       else if Char.is_alpha(head) (*identifier or keyword*)
