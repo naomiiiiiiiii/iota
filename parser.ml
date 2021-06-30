@@ -57,9 +57,7 @@ let cons (x, l) = x::l
 
   (*if p decreases length of toks then tok is the decreasing argument
   and repeat p toks will terminate*)
-  let rec repeat p toks = (epsilon |:| epsilon) toks
-
-  (* (((circ (repeat p) p) >> cons) |:| epsilon) toks*)
+  let rec repeat p toks =  (((circ (repeat p) p) >> cons) |:| epsilon) toks
 
   let reader p s = match (p (Lex.scan s)) with
       (e, []) -> e

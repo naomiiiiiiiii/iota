@@ -19,7 +19,7 @@ module Display_Source = Display(Source)
 
 let testexp = Bind(Free("1starg"), Lam(("aa", Nattp), Bound(0)))
 
-let test1 = "\\(x: Nat).x"
+let test1 = "\\(x: Nat)(y: Unit).x"
 
 let v = Display_Source.printer testexp
 let v1 = Display_Source.printer (ParseTerm.read test1)

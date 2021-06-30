@@ -54,14 +54,14 @@ let rec term toks =
   print_endline("running term on " ^ (SourceLex.display_toks toks));
 (((circ term (*look for body of the lambda *)
       ((keycircr "."
-          (keycircl typed_id
-             (*(circ (repeat typed_id) typed_id) look for all the captured vars with
-                                               type annotations*)
+          (keycircl 
+             (circ (repeat typed_id) typed_id) (*look for all the captured vars with
+                                               type annotations**)
              "\\") (*looking for a lambda*)
-       ) >> singleton) (*collects identifiers into a list*)
+       ) >> cons) (*collects identifiers into a list*)
    ) >> Source.absList) (*turns list of identifiers and body into a lam*)
  |:| ((circ (repeat atom) atom) >> Source.applyList) (*single atom or application of atoms*)
- (* |:| ((keycircl atom "ret") >> Source.ret) (*looking for a ret. make ret: exp -> exp*)
+  |:| ((keycircl atom "ret") >> Source.ret) (*looking for a ret. make ret: exp -> exp*)
   |:| ((keycircl (keycircl (circ (keycircr ")" term) (*2nd term*)
                              (keycircr "," term)) (*1st term*)
                "(" )
@@ -70,7 +70,7 @@ let rec term toks =
   |:| ((circ term (keycircr ":=" term)) >> Source.asgn) (*: (exp * exp) -> exp*)
   |:| ((keycircl atom "!") >> Source.deref)
  |:| constant
-    )*) ) toks
+    ) toks
 and atom toks =  ((id >> Source.free)
                   |:| (keycircr ")" (keycircl term "("))
                  |:| constant) toks
