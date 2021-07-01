@@ -46,27 +46,33 @@ val checker_help g m = match m with
   | Bound i -> (get_type (List.nth G i) ("unbound variable:" ^ (Int.to_string i)))
   | Star -> Unit
   | Nat _ -> Nattp
-  | Loc i -> (get_type (Map.find store i) ("uninitialized location:" ^ (Int.to_string i)))
+  | Loc i -> raise TypeError ("uninitialized location:" ^ (Int.to_string i))
   | Lam (_, tau0, m) -> Arr (tau0, (checker_help (tau0:: G) m))
   | Ap(fn, arg) -> let tau_arg = (checker_help g arg)
     and tau_fn = (checker_help g fn) in
     (match tau_fn with
       Arr(s, t) when (s == tau_arg) -> t
-    | _ -> raise (TypeError "tried to apply " ^ (Display.print_typ tau_fn) ^ "to" ^
-                  (Display.print_typ tau_arg)))
+    | _ -> raise (TypeError ("cannot apply " ^ (Display.print_typ tau_fn) ^ "to" ^
+                  (Display.print_typ tau_arg))))
   | Ret(m0) -> Comp (checker_help g m0)
   | Bind(m0, m1) -> let tau_arg = (checker_help g m0) in
     (match tau_arg with
        Comp(tau_arg0) -> (checker_help (tau_arg0::g) m1)
-     | _ -> raise (TypeError "tried to bind "^(Display.print_type tau_arg))
+     | _ -> raise (TypeError ("cannot bind "^(Display.print_typ tau_arg)))
     )
   | Ref(m0) -> Reftp (checker_help g m0)
   | Asgn(loc, v) -> let tau_loc = (checker_help g loc)
     and tau_v = (checker_help g v) in
     (match tau_loc with
-    Reftp(tau_loc0) when -> )
-
-
+       Reftp(tau_loc0) when (tau_loc0 == tau_v) -> Unit
+     | _ -> raise (TypeError ("cannot assign " ^ (Display.print_typ tau_loc) ^ "the value " ^
+                   (Display.print_typ tau_v))
+                  ))
+  | Deref loc -> let tau_loc = (checker_help g loc) in
+    (match tau_loc with
+       Reftp(tau_loc0) -> tau_loc0
+     | _ -> raise (TypeError ("cannot dereference " ^ (Display.print_typ tau_loc)))
+    )
 
   val checker M = checker_help (Map.empty Int.comparator)
 
