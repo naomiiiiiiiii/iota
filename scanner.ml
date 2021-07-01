@@ -24,9 +24,9 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
   type token = Id of string | Key of string | Nat of int
 
   let display_tok t = match t with
-      Id s -> " id~" ^ s ^ (String.of_char '\n')
-    | Key s -> " key~" ^ s ^ (String.of_char '\n')
-    | Nat n -> string_of_int(n)
+      Id s -> " id~" ^ s
+    | Key s -> " key~" ^ s
+    | Nat n -> " nat~" ^string_of_int(n)
 
   let display_toks l = String.concat (List.map ~f:display_tok l)
 

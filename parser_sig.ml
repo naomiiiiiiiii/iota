@@ -8,12 +8,14 @@ include Scanner
 (*start here why aren't you doing this as an mli?*)
 
 module type PARSE = sig
-  (*module Lex: Scanner.LEXICAL*)
-  (*if a precondition is not met, raise syntax error*)
 
   type token
 
 exception SyntaxErr of string
+exception SyntaxErr_forced of string
+
+(*module Lex: Scanner.LEXICAL*)
+  (*if a precondition is not met, raise syntax error*)
 
   (*PRE: L = (Id s)::rem, ie L starts with identifier token
     POST: id L = (s, rem)*)

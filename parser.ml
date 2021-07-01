@@ -13,7 +13,7 @@ module Parsing (Lex: LEXICAL): (Parser_sig.PARSE with type token = Lex.token) = 
 type token = Lex.token
 
 exception SyntaxErr of string
-  exception SyntaxErr_imeanitthistime of string
+  exception SyntaxErr_forced of string
 
   (*module Lex = Lex*)
 let cons (x, l) = x::l
@@ -23,9 +23,9 @@ let cons (x, l) = x::l
     | _ -> raise (SyntaxErr "expected identifier\n")
 
   let key k toks = match toks with
-      (Lex.Key k0 :: rem) -> if (String.equal k k0) then (k, rem)
-      else raise (SyntaxErr ("expected keyword " ^ k ^ " got keyword "^k0))
-    | _ -> raise (SyntaxErr ("expected keyword " ^ k))
+      (Lex.Key k0 :: rem) when (String.equal k k0) -> (k, rem)
+    | _ -> raise (SyntaxErr ("expected" ^ (Lex.display_toks [Lex.Key k]) ^
+                             " but got" ^ (Lex.display_toks toks)))
 
   let natp toks = match toks with
       (Lex.Nat n::rem) -> (n, rem)
@@ -42,7 +42,7 @@ let cons (x, l) = x::l
     (p2 toks)
 
   let force p = fun toks -> try (p toks) with SyntaxErr msg ->
-    raise (SyntaxErr_imeanitthistime msg)
+    raise (SyntaxErr_forced msg)
 
   let (>>) p f = fun toks -> let (x, rem) = (p toks) in
     (f x, rem)

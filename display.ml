@@ -53,7 +53,7 @@ let constant = function
     front ^ (exp_to_string body)
   | Ap _ -> ap_to_string m
   | Ret(m0) -> "ret" ^ (atom_to_string m0)
-  | Bind(m1, m2) -> "bind(" ^ (exp_to_string m1) ^ "," ^ (exp_to_string m2) ^ ")"
+  | Bind(m1, m2) -> "bind(" ^ (exp_to_string m1) ^ " , " ^ (exp_to_string m2) ^ ")"
   | Ref(v) -> "ref" ^ (atom_to_string v)
   | Asgn(r, e) -> (atom_to_string r) ^ ":=" ^ (exp_to_string e)
   | Deref r -> "!"^(atom_to_string r)
@@ -61,12 +61,12 @@ and ap_to_string m = match m with (*once ap_to_stringp is entered all terms
                                that aren't simply identifiers will be
                                  wrapped in parens,
                               identifiers will have a space put in front*)
-    Ap(m1, m2) -> (ap_to_string m1) ^ " " ^ (atom_to_string m2)
+    Ap(m1, m2) -> (ap_to_string m1) ^ (atom_to_string m2)
   | _ -> atom_to_string m
 and atom_to_string m = match m with
-    Free(a) -> a
+    Free(a) -> " " ^ a
   |  _ when (constant m) -> (exp_to_string m)
-  | _ -> "(" ^ (exp_to_string m) ^ ")"
+  | _ -> "(" ^ (exp_to_string m) ^ ") "
 
 
 let printer m = print_endline(exp_to_string m)
