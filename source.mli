@@ -1,23 +1,12 @@
-include Base
-include Core
-include Core_kernel
-include String_lib
-include Scanner
-module MyString = String_lib
+open Core_kernel
 
-let o = Fn.compose
-
-
-
-module type SOURCE = sig
-
-  type typ = Nattp
+type typ = Nattp
            | Unit
            | Arr of typ * typ
            | Reftp of typ
            | Comp of typ
 
-  type exp = Free of string
+type exp = Free of string
                | Bound of int
                | Star
            | Nat of int
@@ -60,7 +49,7 @@ one store per PROGRAM (typechecker and evaluator) not one store per language
   *)
 
   (*inst env M instantiates M with the variables defined in environment env*)
-  val inst: (string, exp, String.comparator_witness) Map.t -> exp -> exp
+  val inst: (string, exp, Core_kernel.String.comparator_witness) Map.t -> exp -> exp
 
 
 
@@ -77,6 +66,5 @@ val loc : int -> exp
 val arr : typ * typ -> typ
 val reftp : typ -> typ
 val comp : typ -> typ
-end
 
 

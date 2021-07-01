@@ -1,8 +1,6 @@
-include Base
-include Core
-include Core_kernel
 include String_lib
 module MyString = String_lib
+
 let o = Fn.compose
 
 module type KEYWORD = sig
@@ -18,7 +16,6 @@ module type LEXICAL = sig
   val scan: string -> token list
 val display_toks : token list -> string
 end
-
 
 module Lexical (Keywords: KEYWORD) : LEXICAL = struct
   type token = Id of string | Key of string | Nat of int

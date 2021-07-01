@@ -1,21 +1,8 @@
 include Base
 include Core
 include Core_kernel
-include String_lib
-include Scanner
-include Parser
-include Parser_sig
 include Source
-module MyString = String_lib
 
-let o = Fn.compose
-
-module Display (Lang: Source_sig.SOURCE) : (Display_sig.DISPLAY with type exp = Lang.exp
-                                                                 and type typ = Lang.typ) = struct
-  type exp= Lang.exp
-  type typ = Lang.typ
-
-open Lang
 
 let rec type_to_string = function
     Nattp -> "Nat"
@@ -26,7 +13,7 @@ let rec type_to_string = function
 
 
 let rec rename bs a =
-  if MyString.member bs a then rename  bs (a ^ "'") else a
+  if String_lib.member bs a then rename  bs (a ^ "'") else a
 
 let rec strip(bs, m) = match m with
     Lam((x, tau), t) ->
@@ -71,4 +58,3 @@ and atom_to_string m = match m with
 
 let printer m = print_endline(exp_to_string m)
 
-end

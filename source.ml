@@ -1,18 +1,8 @@
 include Base
 include Core
 include Core_kernel
-include String_lib
-include Scanner
-include Parser
-include Source_sig
-module MyString = String_lib
 
-let o = Fn.compose
-
-
-
-module Source : SOURCE = struct
-  type typ = Nattp
+type typ = Nattp
            | Unit
            | Arr of typ * typ
            | Reftp of typ
@@ -131,4 +121,3 @@ let reftp x = Reftp(x)
 let comp x = Comp(x)
 
 
-end

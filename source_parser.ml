@@ -2,20 +2,16 @@ include Base
 include Core
 include Core_kernel
 include String_lib
-include Scanner
-include Parser
-include Parser_sig
-include Source
 module MyString = String_lib
+include Scanner
+include Source
+
+open Parser
 
 let cons (x, l) = x::l
-let o = Fn.compose
 
 (*shouldnt ever need to parse types,just print them from AST, going other way*)
 
-
-module type PARSE_TERM = sig
-  val read : string -> Source.exp end
 
 module SourceKey : Scanner.KEYWORD = struct
   let alpha_num = ["ret"; "bind"; "let"; "ref"; "in"; "Nat"; "Unit"; "Ref"; "Comp"]
@@ -26,11 +22,10 @@ end
 
 module SourceLex : Scanner.LEXICAL = Scanner.Lexical(SourceKey)
 
-module SourceParsing : (Parser_sig.PARSE with type token = SourceLex.token) = Parser.Parsing(SourceLex)
+module SourceParser : (Parser_sig.PARSER with type token = SourceLex.token) = Parser(SourceLex)
 
 
-module ParseTerm : PARSE_TERM = struct
-  open SourceParsing
+  open SourceParser
 
   let constant =  (natp >> Source.nat)
                    |:| (starp >> Source.star)
@@ -99,4 +94,3 @@ print_endline "in atom";
 let read s = match term (SourceLex.scan s) with
     (m, []) -> m
   | (_, _::_) -> raise (SyntaxErr "Extra characters in phrase")
-    end

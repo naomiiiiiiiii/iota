@@ -2,7 +2,7 @@
 
 (executable
  (name test)
- (libraries base stdio core)
+ (libraries base stdio core core_kernel)
  )
 
 (env

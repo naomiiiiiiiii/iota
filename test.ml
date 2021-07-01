@@ -6,16 +6,14 @@ include Scanner
 include Parser
 include Parser_sig
 include Source
-include Source_parsing
+include Source_parser
 module MyString = String_lib
 
 open Display
 
-open Source_parsing
+open Source_parser
 
 open Source
-
-module Display_Source = Display(Source)
 
 let testexp = Bind(Free("1starg"), Lam(("aa", Nattp), Bound(0)))
 
@@ -43,10 +41,9 @@ let test12 = "\\(x: Ref(Nat -> Nat)).!x"
 *)
 
 
-
 let test11 = "\\(x: Comp((Ref Nat) -> Nat)).x:=5"
 
 
   let test = "\\(x: Nat)(y: Unit).ref(x)"
-let v2 = Display_Source.printer (ParseTerm.read test11)
+let v2 = printer (read test11)
 (*let v3 = Display_Source.printer (ParseTerm.read test11)*)

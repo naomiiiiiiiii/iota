@@ -1,14 +1,5 @@
-(*include Base
-include Core
-include Core_kernel
-include String_lib
-include Scanner
-  module MyString = String_lib*)
 
-(*start here why aren't you doing this as an mli?*)
-
-module type PARSE = sig
-
+module type PARSER = sig
   type token
 
 exception SyntaxErr of string

@@ -1,14 +1,11 @@
 include Base
 include Core
 include Core_kernel
-include String_lib
 include Scanner
-include Parser_sig
-module MyString = String_lib
+open Parser_sig
 let o = Fn.compose
 
-module Parsing (Lex: LEXICAL): (Parser_sig.PARSE with type token = Lex.token) = struct
-
+module Parser (Lex: LEXICAL): (PARSER with type token = Lex.token) = struct
 
 type token = Lex.token
 
