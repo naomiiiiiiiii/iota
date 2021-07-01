@@ -56,5 +56,6 @@ and atom_to_string m = match m with
   | _ -> "(" ^ (exp_to_string m) ^ ") "
 
 
-let printer m = print_endline(exp_to_string m)
+let print_typ m = print_endline(typ_to_string m)
+let print_exp m = print_endline(exp_to_string m)
 

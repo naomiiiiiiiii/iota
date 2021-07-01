@@ -1,27 +1,27 @@
 open Core_kernel
 
 type typ = Nattp
-           | Unit
-           | Arr of typ * typ
-           | Reftp of typ
-           | Comp of typ
+         | Unit
+         | Arr of typ * typ
+         | Reftp of typ
+         | Comp of typ
 
 type exp = Free of string
-               | Bound of int
-               | Star
-           | Nat of int
-           | Loc of int
-               | Lam of (string * typ) * exp
-               | Ap of exp * exp
-               | Ret of exp
-               | Bind of exp * exp
-           | Ref of exp (*modifies store, evaluates to location*)
-           | Asgn of exp * exp (*modifies store, evaluates to unit*)
+         | Bound of int
+         | Star
+         | Nat of int
+         | Loc of int
+         | Lam of (string * typ) * exp
+         | Ap of exp * exp
+         | Ret of exp
+         | Bind of exp * exp
+         | Ref of exp (*modifies store, evaluates to location*)
+         | Asgn of exp * exp (*modifies store, evaluates to unit*)
          | Deref of exp
 
   (*iterators*)
-  val traverse: (int -> (string -> exp) * (int -> exp)) -> int -> exp -> exp
-  val fold_expr: (string -> 'a -> 'a) -> (int -> 'a -> 'a) -> 'a -> exp -> 'a
+val traverse: (int -> (string -> exp) * (int -> exp)) -> int -> exp -> exp
+val fold_expr: (string -> 'a -> 'a) -> (int -> 'a -> 'a) -> 'a -> exp -> 'a
 
 (*fvars M returns a list of the free vars in M*)
 val fvars: exp -> string list
@@ -29,19 +29,19 @@ val fvars: exp -> string list
 (* start here: find a natural numbers type so you dont have to keep checking this
 PRE: i >= 0
 POST: abstract i x M will turn all free occurences of x into the bound variable i*)
-  val abstract : int -> string -> exp -> exp
+val abstract : int -> string -> exp -> exp
 
 (*
 absList [x1; ... ; xn] M = \x1, ... xn. M**)
-  val absList : (string * typ) list * exp -> exp
+val absList : (string * typ) list * exp -> exp
 
 (*applyList (M, [M1; ... ; Mn]) = M M1 ... Mn*)
-  val applyList : exp * exp list -> exp
+val applyList : exp * exp list -> exp
  
 (*
 PRE: i >= 0
 subst i v M = M[i := v], where i is a bound variable*)
-  val subst : int -> exp -> exp -> exp
+val subst : int -> exp -> exp -> exp
 
   (*for the references
     val store: (string, exp, String.comparator_witness) Map.t
@@ -49,7 +49,7 @@ one store per PROGRAM (typechecker and evaluator) not one store per language
   *)
 
   (*inst env M instantiates M with the variables defined in environment env*)
-  val inst: (string, exp, Core_kernel.String.comparator_witness) Map.t -> exp -> exp
+val inst: (string, exp, String.comparator_witness) Map.t -> exp -> exp
 
 
 
