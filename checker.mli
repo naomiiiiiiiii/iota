@@ -2,7 +2,7 @@ open Core_kernel
 open Source
 (*job of type checker is to check a term after it is fully instantiated*)
 
-
+(*start here consider using a first class module*)
 module type TYPESTATE = sig
   val env : (string, typ, String.comparator_witness) Map.t
       (*everything that comes out of the store should be ref(_)*)
@@ -38,4 +38,3 @@ val checker : exp -> typ
 
 end
 
-module Checker (State: TYPESTATE) : CHECKER
