@@ -49,9 +49,19 @@ let get_type otau error = match otau with
     None -> raise (TypeError error)
   | Some tau -> tau 
 
+let get_comptype ctau = match tau with
+    Comp(tau) -> tau
+  | _ -> raise (TypeError ("expected comp type, got ^" (Display.typ_to_string ctau))) 
+
 let is_comp tau = match tau with
     Comp _ -> true
   | _ -> false
+
+(*bind notes: dont want m1 to be a normal function which
+                                        has to be evaluated to a lambda, having its oreffects
+                                        want the first thing you to do be to bind m0
+                                        have to change this so that m1 is not a function
+                                        but just at term with a bound variable*) 
 
 (*only ways to get a comp value are ret and ref*)
 let rec checker_help g m = match m with
@@ -68,13 +78,12 @@ let rec checker_help g m = match m with
     | _ -> raise (TypeError ("cannot apply " ^ (Display.typ_to_string tau_fn) ^ " to " ^
                   (Display.typ_to_string tau_arg))))
   | Ret(m0) -> Comp (checker_help g m0) (*get a comp, and a value*)
-  | Bind(m0, m1) -> let tau_arg = (checker_help g m0)
-    and tau_fn = (checker_help g m1) in 
-    (match tau_fn with
-       Arr(tau_arg0, tau_out) when ((typ_equal (Comp tau_arg0) tau_arg) && (is_comp tau_out)) -> tau_out
-     | _ -> raise (TypeError ("cannot bind " ^ (Display.typ_to_string tau_arg) ^
-                                " into " ^ (Display.typ_to_string tau_fn)))
-    ) (*get a comp, but not a value*)
+  | Bind(m0, m1) -> let tau_arg = get_comptype ((checker_help g m0))
+    and tau_out = (checker_help (tau_arg::g) m1) in
+    if (is_comp tau_out) then tau_out else raise (TypeError ("cannot bind " ^ (Display.typ_to_string (Comp tau_arg)) ^
+                                                             " into " ^ (Display.typ_to_string tau_out))
+                                                 )
+     (*get a comp, but not a value*)
   | Ref(m0) -> Comp (Reftp (checker_help g m0)) (*get a comp *)
   | Asgn(loc, v) -> let tau_loc = (checker_help g loc)
     and tau_v = (checker_help g v) in

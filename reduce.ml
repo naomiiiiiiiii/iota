@@ -35,7 +35,10 @@ let rec eval (m, s) = match m with
     (match fnval with
       Lam(_, body) -> eval ((subst 0 argval body), s2)
      | _  -> (Ap(fnval, argval), s2))
-  | Ret(e) -> (m, s) (*suspended! *)
+  | Ret(c) -> (m, s) (*suspended! *)
+  | Bind(e1, e2) -> let (e1cval, s1) = (eval (e1, s)) in (*unsuspends it!*)
+    let e1val = get_comp e1cval in (eval (subst 0 e1val e2), s1)
+  |
   | Bound _ | exception _ -> raise (RuntimeError ("failing on " ^ (exp_to_string m)))
 
 
