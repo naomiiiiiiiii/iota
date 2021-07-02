@@ -2,31 +2,40 @@ open Core_kernel
 open Source
 
 module type STATE = sig
-  val env : (string, exp, String.comparator_witness) Map.t
-  val store : (int, exp, Int.comparator_witness) Map.t
+  type store_type = (int, exp, Int.comparator_witness) Map.t
+  type env_type = (string, exp, String.comparator_witness) Map.t
+  val store : store_typ 
+  val env : env_typ
 end
 
 module type REDUCER = sig 
 exception RuntimeError of string
-
-val eval: exp -> exp
+type store_type
+val eval: exp * store_type -> exp * store_type
 
 end
 
+(*probably need to put a with here*)
 module Reducer (State: STATE): REDUCER = struct
 
   exception RuntimeError of string
 
-type stepopt = Step of exp | Val 
+  type store_typ = State.store_type
 
-let try_step m = match m with
-    Free id -> Step (Map.find_exn env id)
-  | Star -> Val
-  | Nat _ -> Val
-  | Loc _ -> Val
-  | Lam _ -> Val
-  | Ap(fn, arg) -> match fn with
+type stepopt = Step of (exp, store_typ) | Val 
 
+let rec eval (m, s) = match m with
+    Free id -> eval ((Map.find_exn env id), s)
+  | Star -> (m, s)
+  | Nat _ -> (m, s)
+  | Loc _ -> (m, s)
+  | Lam _ -> (m, s)
+  | Ap(fn, arg) -> let (fnval, s1) = (eval (fn, s)) in
+    let (argval, s2) = (eval (arg, s1)) in
+    (match fnval with
+      Lam(_, body) -> eval ((subst 0 argval body), s2)
+     | _  -> (Ap(fnval, argval), s2))
+  | Ret(e) -> (m, s) (*suspended! *)
   | Bound _ | exception _ -> raise (RuntimeError ("failing on " ^ (exp_to_string m)))
 
 

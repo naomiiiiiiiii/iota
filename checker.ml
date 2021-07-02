@@ -3,6 +3,14 @@ include Core
 include Core_kernel
 include Source
 
+(*ref(e): comp (ref tau) because a command is still to be performed, ie the
+store is still to be modified
+loc(n): (Ref tau) because it's really just a value, index into the store,
+no mutability
+when you bind a comp(ref tau) into \x.M, the M takes a REFERENCE (value)
+NOT a delayed reference*)
+
+
 module type TYPESTATE = sig
   val env : (string, typ, String.comparator_witness) Map.t
   (*val store : (int, typ, Int.comparator_witness) Map.t env is for identifiers at the top level
@@ -45,8 +53,9 @@ let is_comp tau = match tau with
     Comp _ -> true
   | _ -> false
 
+(*only ways to get a comp value are ret and ref*)
 let rec checker_help g m = match m with
-    Free s -> (get_type (Map.find env s) ("unbound identifier:" ^ s))
+    Free id -> (get_type (Map.find env id) ("unbound identifier:" ^ s))
   | Bound i -> (get_type (List.nth g i) ("unbound variable:" ^ (Int.to_string i)))
   | Star -> Unit
   | Nat _ -> Nattp
@@ -58,15 +67,15 @@ let rec checker_help g m = match m with
       Arr(s, t) when (typ_equal s tau_arg) -> t
     | _ -> raise (TypeError ("cannot apply " ^ (Display.typ_to_string tau_fn) ^ " to " ^
                   (Display.typ_to_string tau_arg))))
-  | Ret(m0) -> Comp (checker_help g m0)
+  | Ret(m0) -> Comp (checker_help g m0) (*get a comp, and a value*)
   | Bind(m0, m1) -> let tau_arg = (checker_help g m0)
     and tau_fn = (checker_help g m1) in 
     (match tau_fn with
        Arr(tau_arg0, tau_out) when ((typ_equal (Comp tau_arg0) tau_arg) && (is_comp tau_out)) -> tau_out
      | _ -> raise (TypeError ("cannot bind " ^ (Display.typ_to_string tau_arg) ^
                                 " into " ^ (Display.typ_to_string tau_fn)))
-    )
-  | Ref(m0) -> Reftp (checker_help g m0)
+    ) (*get a comp, but not a value*)
+  | Ref(m0) -> Comp (Reftp (checker_help g m0)) (*get a comp *)
   | Asgn(loc, v) -> let tau_loc = (checker_help g loc)
     and tau_v = (checker_help g v) in
     (match tau_loc with
