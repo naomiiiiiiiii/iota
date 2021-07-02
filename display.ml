@@ -4,12 +4,12 @@ include Core_kernel
 include Source
 
 
-let rec type_to_string = function
+let rec typ_to_string = function
     Nattp -> "Nat"
   | Unit -> "Unit"
-  | Arr(t1, t2) -> (type_to_string t1) ^ "->" ^ (type_to_string t2)
-  | Reftp(t1) -> "Ref(" ^ (type_to_string t1) ^ ")"
-  | Comp(t1) -> "Comp(" ^ (type_to_string t1) ^ ")"
+  | Arr(t1, t2) -> (typ_to_string t1) ^ "->" ^ (typ_to_string t2)
+  | Reftp(t1) -> "Ref(" ^ (typ_to_string t1) ^ ")"
+  | Comp(t1) -> "Comp(" ^ (typ_to_string t1) ^ ")"
 
 
 let rec rename bs a =
@@ -18,7 +18,7 @@ let rec rename bs a =
 let rec strip(bs, m) = match m with
     Lam((x, tau), t) ->
     let newx = rename (fvars t) x in
-        let x_annot =  "(" ^ newx ^ ":" ^ (type_to_string tau) ^ ")"
+        let x_annot =  "(" ^ newx ^ ":" ^ (typ_to_string tau) ^ ")"
     in strip (x_annot :: bs, subst 0 (Free newx) t)
   | _ -> (List.rev bs, m)
 

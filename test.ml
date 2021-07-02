@@ -7,43 +7,33 @@ include Parser
 include Parser_sig
 include Source
 include Source_parser
+include Checker
 module MyString = String_lib
 
 open Display
 
-open Source_parser
-
 open Source
 
-let testexp = Bind(Free("1starg"), Lam(("aa", Nattp), Bound(0)))
+let empty = (Map.empty (module String))
+let testenv = Map.set empty ~key:"f" ~data:(Arr(Nattp, Reftp(Unit)))
 
-(*passing
-  let test = "\\(x: Nat)(y: Unit).ref(x)"
-let test1 = "\\(x: Nat)(y: Ref(Unit)).ref(x)"
+module State: TYPESTATE = struct
+  let env = testenv 
+end
 
+module Checker_Test = Checker(State)
 
-let test = "\\(x: Nat)(y: Unit).ref(x)"
-let test1 = "(\\(x: Nat)(y: Ref(Unit)).ref(x))"
-let test2 = "\\(y: Ref(Unit)).y y"
-let test3 = "f"
-let test4 = "5"
-let test5 = "()"
-let test6 = "(\\(y: Ref(Unit)).y y)"
-  let test7 = test6 ^ " " ^ test1 ^ " " ^ test4
-let test6 = "(\\(y: Ref(Unit)).y y)"
-let test8 = "ret x" 
-  let test9 = "bind(\\(zzz: Nat).ref zzz, ret" ^ test6 ^ ")"
+open Checker_Test
+    (*passing
+      let test = read "\\(x: Nat)(y: Unit).ref(x)"
+let test = read "bind(ret(5), \\(x: Nat).ret ())"
 
-let test6 = "(\\(y: Ref(Unit)).y y)"
-let test10 = "bind(\\zzz.ref zzz, ret" ^ test6 ^ ")"
-let test10 = "\\(x: Nat -> Nat).!x"
-let test12 = "\\(x: Ref(Nat -> Nat)).!x"
-*)
+let test = read "bind(ret(5), \\(x: Nat).ret ())"
+let test1 = read "bind(ret(ref(5)), \\(x: Ref(Nat)).ret(!x))"
+let test1 = read "f 5" with f in env
+    *)
 
 
-let test11 = "\\(x: Comp((Ref Nat) -> Nat)).x:=5"
+let test1 = read "f 5"
+let v = print_endline(typ_to_string (checker test1))
 
-
-  let test = "\\(x: Nat)(y: Unit).ref(x)"
-let v2 = printer (read test11)
-(*let v3 = Display_Source.printer (ParseTerm.read test11)*)

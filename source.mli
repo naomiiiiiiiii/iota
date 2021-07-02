@@ -1,23 +1,27 @@
 open Core_kernel
 
-type typ = Nattp
-         | Unit
-         | Arr of typ * typ
-         | Reftp of typ
-         | Comp of typ
+type typ = Nattp (*d*)
+         | Unit (*d*)
+         | Arr of typ * typ (*done *)
+         | Reftp of typ (*d*)
+         | Comp of typ (*d*)
 
-type exp = Free of string
-         | Bound of int
-         | Star
-         | Nat of int
+type exp = Free of string (*d*) 
+         | Bound of int (*d*)
+         | Star (*d*)
+         | Nat of int (*d*)
          | Loc of int
-         | Lam of (string * typ) * exp
-         | Ap of exp * exp
-         | Ret of exp
-         | Bind of exp * exp
-         | Ref of exp (*modifies store, evaluates to location*)
-         | Asgn of exp * exp (*modifies store, evaluates to unit*)
-         | Deref of exp
+         | Lam of (string * typ) * exp (*done *)
+         | Ap of exp * exp (*d*)
+         | Ret of exp (*d*)
+         | Bind of exp * exp (*d*)
+         | Ref of exp (*modifies store, evaluates to location*) (*d*)
+         | Asgn of exp * exp (*d*) (*modifies store, evaluates to unit*)
+         | Deref of exp (*d*)
+
+(*start here remove whatever stuff doesn't get used outside of source*)
+
+val typ_equal: typ -> typ -> bool
 
   (*iterators*)
 val traverse: (int -> (string -> exp) * (int -> exp)) -> int -> exp -> exp

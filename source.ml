@@ -23,6 +23,18 @@ type typ = Nattp
          | Asgn of exp * exp
          | Deref of exp
 
+let rec typ_equal x y = match (x, y) with
+    (Nattp, Nattp) -> true
+  | (Unit, Unit) -> true
+  | (Arr(x1, x2), Arr(y1, y2)) -> (typ_equal x1 y1) && (typ_equal x2 y2)
+  | (Reftp(x1), Reftp(y1)) -> typ_equal x1 y1
+  | (Comp(x1), Comp(y1)) -> typ_equal x1 y1
+  | _ -> false
+
+(* exp_equal
+  | (Asgn(x1), Asgn(y1)) -> typ_equal x1 y1
+   | (Deref(x1), Deref(y1)) -> typ *)
+
 
 
 (*a lot of functions regarding exps involve iterating over
@@ -112,7 +124,7 @@ let ret x = Ret x
 let bind (x, y) = Bind(x, y)
 let refexp x = Ref(x)
 let asgn(x, y) = Asgn(x, y)
-let deref x = (print_endline "in deref"); Deref x
+let deref x =  Deref x
 let star _ = Star
 let nat x = Nat x
 let loc x = Loc x

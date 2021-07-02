@@ -36,19 +36,13 @@ module SourceParser : (Parser_sig.PARSER with type token = SourceLex.token) = Pa
 
 
   (*want this to be tok list -> type * tok list*)
-  let rec typp toks =
-    (print_endline("running typ on " ^ (SourceLex.display_toks toks)));
-    let (s, rem) = (
-    ((circ (keycircl atom_typp  "->") atom_typp) >> Source.arr)
+  let rec typp toks = (((circ (keycircl atom_typp  "->") atom_typp) >> Source.arr)
     |:| ((keycircl atom_typp "Ref") >> Source.reftp)
     |:| ((keycircl atom_typp "Comp") >> Source.comp)
-    |:| atom_typp
-  ) toks in
-    print_endline("output of typ is" ^ (SourceLex.display_toks rem)); (s, rem)
+    |:| atom_typp) toks
                     (*start here automate the surrounded by parens thing,
                     shows up in 3 places*)
-and atom_typp toks =
-(constant_typ
+and atom_typp toks = (constant_typ
  |:|(keycircr ")" (keycircl typp "("))) toks
 (*and atom_typp toks =
   let (s, rem) = (print_endline("running atom_typ on " ^ (SourceLex.display_toks toks));
@@ -64,7 +58,6 @@ let (s, rem) = keycircr ")" (circ typp (keycircr ":" (keycircl id "("))) toks in
   print_endline ("out of typed_id with" ^ (SourceLex.display_toks rem)); (s, rem)*)
 
 let rec term toks =
-  print_endline("running term on " ^ (SourceLex.display_toks toks));
 (((circ term (*look for body of the lambda *)
       ((keycircr "."
           (keycircl 
@@ -84,12 +77,9 @@ let rec term toks =
  |:| ((circ (repeat atom) atom) >> Source.applyList) (*single atom or application of atoms
                                                           start here i dont think apply list should be in source*)
     ) toks
-and atom toks =
-print_endline "in atom";
-  ((id >> Source.free)
+and atom toks = ((id >> Source.free)
                   |:| constant
-                  |:| (keycircr ")" (keycircl term "("))
-                 ) toks
+                  |:| (keycircr ")" (keycircl term "("))) toks
                  
 let read s = match term (SourceLex.scan s) with
     (m, []) -> m
