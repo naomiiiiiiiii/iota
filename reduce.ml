@@ -20,9 +20,10 @@ module Reducer (State: STATE): REDUCER = struct
 
   exception RuntimeError of string
 
+  type env_type = State.env_type
   type store_typ = State.store_type
 
-  type stepopt = Step of (exp, store_typ) | Val
+  val env = State.env
 
   let get_loc loc = match loc with
       Loc n -> n
@@ -47,7 +48,7 @@ let deref loc s = let index = (get_loc loc) in match (Map.find s index) with
 
 let rec eval (m, s) = match m with
     Free id -> eval ((Map.find_exn env id), s)
-  | Star -> (m, s)
+  | Star -> (m, s) (*combine all these caes into one case if this compiles*)
   | Nat _ -> (m, s)
   | Loc _ -> (m, s)
   | Lam _ -> (m, s)
@@ -56,11 +57,13 @@ let rec eval (m, s) = match m with
     (match fnval with
       Lam(_, body) -> eval ((subst 0 argval body), s2)
      | _  -> (Ap(fnval, argval), s2))
-  | Ret(c) -> (m, s) (*suspended! *)
-  | Bind(e1, e2) -> let (e1cval, s1) = (eval (e1, s)) in (*e1cval should be ret, ref, asn, deref*)
-    let (e1val, s2) = bind_eval(e1cval, s1) in (*releases the computation in e1cval*)
-   eval (subst 0 e1val e2, s2)
-    
+  | Ret(m0) -> (m, s) (*suspended! *)
+  | Bind(m1, m2) -> let (m1cval, s1) = (eval (m1, s)) in (*e1cval should be ret, ref, asn, deref*)
+    let (m1val, s2) = bind_eval(m1cval, s1) in (*releases the computation in e1cval*)
+    eval (subst 0 m1val m2, s2)
+  | Ref(m0) -> (m, s)
+  | Asgn(m0) -> (m, s)
+  | Deref(m0) -> (m, s)
   | Bound _
   | exception RuntimeError _ -> m
   | exception _ -> raise (RuntimeError ("failing on " ^ (exp_to_string m)))
@@ -77,3 +80,4 @@ and bind_eval(m, s) = match m with
   | _ -> raise (RuntimeError ((exp_to_string m) ^ " not bindable"))
 
 
+end

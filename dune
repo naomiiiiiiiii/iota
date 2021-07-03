@@ -1,7 +1,7 @@
 ; (copy_files# ./cmtool/ocaml/FStream.ml)
 
 (executable
- (name test)
+ (name reduce)
  (libraries base stdio core core_kernel)
  )
 

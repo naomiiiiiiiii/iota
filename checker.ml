@@ -35,7 +35,8 @@ vars all get shifted up automatically*)
 type context_typ = typ list 
 
 (*restrict the interp env
-for the types of free variables*)
+  for the types of free variables*)
+type env_type = State.env_type
 let env = State.env (*only values allowed in here, in particular
                                    no references (effectful exps), only locations (after store has been updated)*)
 

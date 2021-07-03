@@ -4,14 +4,17 @@ open Source
 
 (*start here consider using a first class module*)
 module type TYPESTATE = sig
-  val env : (string, typ, String.comparator_witness) Map.t
+  type env_type = (string, typ, String.comparator_witness) Map.t (*for storing identifiers declared earlier in the file being evaluated*)
+  val env : env_type
       (*everything that comes out of the store should be ref(_)*)
 end
 
 module type CHECKER = sig 
-exception TypeError of string
-(*for the bound varibales*)
-type context_typ
+  exception TypeError of string
+  type env_type
+  val env : env_type
+(*for the bound varibales
+  type context_typ*)
 
 (*restrict the interp env, given to us from the call to interp
   which will do the mutable state updates and then pass it back in as a paramater
