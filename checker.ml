@@ -69,7 +69,7 @@ let rec checker_help g m = match m with
   | Bound i -> (get_type (List.nth g i) ("unbound variable:" ^ (Int.to_string i)))
   | Star -> Unit
   | Nat _ -> Nattp
-  | Loc i -> raise (TypeError ("uninitialized location:" ^ (Int.to_string i)))
+  | Loc i -> raise (TypeError ("uninitialized location:" ^ (Int.to_string i))) (*the ONLY guys that have type ref(tau)*)
   | Lam ((_, tau0), m) -> Arr (tau0, (checker_help (tau0:: g) m))
   | Ap(fn, arg) -> let tau_arg = (checker_help g arg)
     and tau_fn = (checker_help g fn) in
@@ -88,13 +88,13 @@ let rec checker_help g m = match m with
   | Asgn(loc, v) -> let tau_loc = (checker_help g loc)
     and tau_v = (checker_help g v) in
     (match tau_loc with
-       Reftp(tau_loc0) when (typ_equal tau_loc0 tau_v) -> Unit
+       Reftp(tau_loc0) when (typ_equal tau_loc0 tau_v) -> Comp(Unit)
      | _ -> raise (TypeError ("cannot assign " ^ (Display.typ_to_string tau_loc) ^ "the value " ^
                    (Display.typ_to_string tau_v))
                   ))
   | Deref loc -> let tau_loc = (checker_help g loc) in
     (match tau_loc with
-       Reftp(tau_loc0) -> tau_loc0
+       Reftp(tau_loc0) -> Comp(tau_loc0)
      | _ -> raise (TypeError ("cannot dereference " ^ (Display.typ_to_string tau_loc)))
     )
 

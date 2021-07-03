@@ -38,3 +38,4 @@ val checker : exp -> typ
 
 end
 
+module Checker (State: TYPESTATE) : CHECKER
