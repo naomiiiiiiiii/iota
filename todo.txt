@@ -1,5 +1,4 @@
 Overall plan
-1) make typechecker over AST
 2) make beta reducer over AST
 3) make main which reads a term from the repl, prints type
 and reduction to normal form
@@ -9,3 +8,5 @@ make display a functor?!
 
 keycircl and keycircr are tptally backwards
 change source to lang so that display.mli is less confusing?
+
+organize checker.mli like reduce.mli
