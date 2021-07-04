@@ -15,7 +15,7 @@ let cons (x, l) = x::l
 
 module SourceKey : Scanner.KEYWORD = struct
   let alpha_num = ["ret"; "bind"; "let"; "ref"; "in"; "Nat"; "Unit"; "Ref"; "Comp"]
-  and symbols = ["("; ")"; "\\"; "."; "="; ":="; "!"; "->"; "*"]
+  and symbols = ["("; ")"; "\\"; "."; "="; ":="; "!"; "->"] (*took out **)
   and commentl = '['
   and commentr = ']'
 end

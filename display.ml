@@ -31,6 +31,11 @@ let stripAbs m = stripAbs_help([], m)
 
 let abs_prefix s1 s2 = "\\" ^ s1 ^ "." ^ s2
 
+(*to keep track of whether i want a space in front of an identifier or not
+as for ret i want one before*)
+
+let nospace = ""
+
 let constant = function
   | Nat _ | Loc _ | Star -> true
   | _ -> false
@@ -44,21 +49,21 @@ let constant = function
   | Lam _ -> let (names, body) = stripAbs m in
     abs_prefix (String.concat names) (exp_to_string body)
   | Ap _ -> ap_to_string m
-  | Ret(m0) -> "ret" ^ (atom_to_string m0)
+  | Ret(m0) -> "ret" ^ (atom_to_string m0 " ")
   | Bind(m1, (s, m2)) -> let (name, body) = zero_to_free (s, m2) in
-    "bind(" ^ (exp_to_string m1) ^ " , " ^ (abs_prefix name (exp_to_string body)) ^ ")"
-  | Ref(v) -> "ref" ^ (atom_to_string v)
-  | Asgn(r, e) -> (atom_to_string r) ^ ":=" ^ (exp_to_string e)
-  | Deref r -> "!"^(atom_to_string r)
+    "bind(" ^ (exp_to_string m1) ^ ", " ^ (abs_prefix name (exp_to_string body)) ^ ")"
+  | Ref(v) -> "ref" ^ (atom_to_string v " ")
+  | Asgn(r, e) -> (atom_to_string r nospace) ^ ":=" ^ (exp_to_string e)
+  | Deref r -> "!"^(atom_to_string r nospace)
 and ap_to_string m = match m with (*once ap_to_stringp is entered all terms
                                that aren't simply identifiers will be
                                  wrapped in parens,
                               identifiers will have a space put in front*)
-    Ap(m1, m2) -> (ap_to_string m1) ^ (atom_to_string m2)
-  | _ -> atom_to_string m
-and atom_to_string m = match m with
-    Free(a) -> " " ^ a
-  |  _ when (constant m) -> (exp_to_string m)
+    Ap(m1, m2) -> (ap_to_string m1) ^ (atom_to_string m2 " ")
+  | _ -> atom_to_string m nospace
+and atom_to_string m sp = match m with
+    Free(a) ->  sp ^ a  
+  |  _ when (constant m) -> sp ^ (exp_to_string m)
   | _ -> "(" ^ (exp_to_string m) ^ ") "
 
 

@@ -11,23 +11,25 @@ when you bind a comp(ref tau) into \x.M, the M takes a REFERENCE (value)
 NOT a delayed reference*)
 
 
-module type TYPESTATE = sig
+(*module type TYPESTATE = sig
   val env : (string, typ, String.comparator_witness) Map.t
   (*val store : (int, typ, Int.comparator_witness) Map.t env is for identifiers at the top level
                                                        store is for expressions stored in locations,
                                                        user can't pick the identifier
   dont need store for type checking, only for evaluation i think*)
-end
+  end*)
 
 module type CHECKER = sig 
+  module State: State.STATE
 exception TypeError of string
 (*for the bound varibales*)
-type context_typ
 val checker : exp -> typ
 end
 
-module Checker (State: TYPESTATE) : CHECKER = struct
-exception TypeError of string
+module Checker (State: State.STATE) : CHECKER = struct
+  exception TypeError of string
+
+  module State = State
 
 (*job of type checker is to check a term after it is fully instantiated
 doing a list so that when i cons a (bound) variable on as (var 0) the indexes of the other
@@ -36,7 +38,6 @@ type context_typ = typ list
 
 (*restrict the interp env
   for the types of free variables*)
-type env_type = State.env_type
 let env = State.env (*only values allowed in here, in particular
                                    no references (effectful exps), only locations (after store has been updated)*)
 
@@ -46,28 +47,29 @@ use ONLY for type chekcing a Loc(n)
 
 (*extracts the type from the type option otau, or raises (TypeError error) if
 otau = NONE*)
-let get_type otau error = match otau with
+let opt_to_exn otau error = match otau with
     None -> raise (TypeError error)
   | Some tau -> tau 
 
-let get_comptype ctau = match tau with
+let get_comptype ctau = match ctau with
     Comp(tau) -> tau
-  | _ -> raise (TypeError ("expected comp type, got ^" (Display.typ_to_string ctau))) 
+  | _ -> raise (TypeError ("expected comp type, got " ^ (Display.typ_to_string ctau))) 
 
 let is_comp tau = match tau with
     Comp _ -> true
   | _ -> false
 
 (*bind notes: dont want m1 to be a normal function which
-                                        has to be evaluated to a lambda, having its oreffects
+                                        has to be evaluated to a lambda, having its own effects
                                         want the first thing you to do be to bind m0
                                         have to change this so that m1 is not a function
-                                        but just at term with a bound variable*) 
+                                        but just at term with a bound variable
+but what is the bound variable CALLED?  *) 
 
 (*only ways to get a comp value are ret and ref*)
-let rec checker_help g m = match m with
-    Free id -> (get_type (Map.find env id) ("unbound identifier:" ^ s))
-  | Bound i -> (get_type (List.nth g i) ("unbound variable:" ^ (Int.to_string i)))
+let rec checker_help (g : context_typ) m = match m with
+    Free id -> fst (opt_to_exn (Map.find env id) ("unbound identifier:" ^ id))
+  | Bound i -> (opt_to_exn (List.nth g i) ("unbound variable:" ^ (Int.to_string i)))
   | Star -> Unit
   | Nat _ -> Nattp
   | Loc i -> raise (TypeError ("uninitialized location:" ^ (Int.to_string i))) (*the ONLY guys that have type ref(tau)*)
@@ -79,8 +81,8 @@ let rec checker_help g m = match m with
     | _ -> raise (TypeError ("cannot apply " ^ (Display.typ_to_string tau_fn) ^ " to " ^
                   (Display.typ_to_string tau_arg))))
   | Ret(m0) -> Comp (checker_help g m0) (*get a comp, and a value*)
-  | Bind(m0, m1) -> let tau_arg = get_comptype ((checker_help g m0))
-    and tau_out = (checker_help (tau_arg::g) m1) in
+  | Bind(m0, ( _, m1)) -> let tau_arg = get_comptype ((checker_help g m0))
+    in let tau_out = (checker_help (tau_arg::g) m1) in
     if (is_comp tau_out) then tau_out else raise (TypeError ("cannot bind " ^ (Display.typ_to_string (Comp tau_arg)) ^
                                                              " into " ^ (Display.typ_to_string tau_out))
                                                  )

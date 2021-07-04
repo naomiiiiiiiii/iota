@@ -1,18 +1,16 @@
-open Core_kernel
 open Source
 (*job of type checker is to check a term after it is fully instantiated*)
 
-(*start here consider using a first class module*)
+(*start here consider using a first class module
 module type TYPESTATE = sig
   type env_type = (string, typ, String.comparator_witness) Map.t (*for storing identifiers declared earlier in the file being evaluated*)
   val env : env_type
       (*everything that comes out of the store should be ref(_)*)
-end
+  end*)
 
-module type CHECKER = sig 
+module type CHECKER = sig
+  module State: State.STATE
   exception TypeError of string
-  type env_type
-  val env : env_type
 (*for the bound varibales
   type context_typ*)
 
@@ -41,4 +39,4 @@ val checker : exp -> typ
 
 end
 
-module Checker (State: TYPESTATE) : CHECKER
+module Checker (State: State.STATE) : CHECKER

@@ -2,21 +2,21 @@ open Base
 open Core_kernel
 open Source
 
-module type STATE = sig
+(*module type STATE = sig
   type store_type = (int, exp, Int.comparator_witness) Map.t (*for storing references*)
   type env_type = (string, exp, String.comparator_witness) Map.t (*for storing identifiers declared earlier in the file being evaluated*)
   val store : store_type 
   val env : env_type
-end
+  end*)
 
 module type REDUCER = sig 
   exception RuntimeError of string
-  module State : STATE
+  module State : State.STATE
   val eval: exp -> exp * State.store_type
 end
 
 (*probably need to put a with here*)
-module Reducer (State: STATE): REDUCER = struct
+module Reducer (State: State.STATE): REDUCER = struct
 
   exception RuntimeError of string
   module State = State
@@ -45,7 +45,7 @@ let deref loc s = let index = (get_loc loc) in match (Map.find s index) with
   | Some m -> (m, s)
 
 let rec eval_help (m, s) = match m with
-    Free id -> eval_help ((Map.find_exn env id), s)
+    Free id -> eval_help (snd (Map.find_exn env id), s)
   | Star | Nat _ | Loc _ | Lam _ | Ret _ | Ref _ | Asgn _ | Deref _ -> (m, s) (*ret, ref, asgn, deref are suspended computations*)
   | Ap(fn, arg) -> let (fnval, s1) = (eval_help (fn, s)) in
     let (argval, s2) = (eval_help (arg, s1)) in
