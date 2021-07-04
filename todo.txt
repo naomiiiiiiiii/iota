@@ -1,5 +1,6 @@
 Overall plan
-2) make beta reducer over AST
+1) set up standard env
+2) test beta reducer on some display test cases
 3) make main which reads a term from the repl, prints type
 and reduction to normal form
 
