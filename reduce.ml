@@ -46,16 +46,15 @@ let deref loc s = let index = (get_loc loc) in match (Map.find s index) with
 
 let rec eval_help (m, s) = match m with
     Free id -> eval_help ((Map.find_exn env id), s)
-  | Star | Nat | Loc _ | Lam _ | Ret _ | Ref _ | Asgn _ | Deref _ -> (m, s) (*ret, ref, asgn, deref are suspended computations*)
+  | Star | Nat _ | Loc _ | Lam _ | Ret _ | Ref _ | Asgn _ | Deref _ -> (m, s) (*ret, ref, asgn, deref are suspended computations*)
   | Ap(fn, arg) -> let (fnval, s1) = (eval_help (fn, s)) in
     let (argval, s2) = (eval_help (arg, s1)) in
     (match fnval with
       Lam(_, body) -> eval_help ((subst 0 argval body), s2)
      | _  -> (Ap(fnval, argval), s2))
-  | Ret _ -> (m, s) (*suspended! *)
   | Bind(m1, m2) -> let (m1cval, s1) = (eval_help (m1, s)) in (*e1cval should be ret, ref, asn, deref*)
     let (m1val, s2) = bind_eval(m1cval, s1) in (*releases the computation in e1cval*)
-    eval_help (subst 0 m1val m2, s2)
+    eval_help (subst 0 m1val (snd m2), s2)
   | exception RuntimeError err -> raise (RuntimeError err)
   | Bound _ | exception _ -> raise (RuntimeError ("failing on " ^ (Display.exp_to_string m)))
 

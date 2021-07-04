@@ -16,7 +16,7 @@ type typ = Nattp
          | Lam of (string * typ) * exp
          | Ap of exp * exp
          | Ret of exp
-         | Bind of exp * exp
+         | Bind of exp * (string * exp)
          | Ref of exp (*ref(e) evaluates to a location (key) after storing e at that location.
                       need to pass a particular ref(e) around as an argument wherever you go, two
                       ref(e) are not the same reference!*)
@@ -54,7 +54,7 @@ let rec traverse (bc: int -> (string -> exp) * (int -> exp)) (start: int): exp -
   | Lam (p, m') -> Lam(p, (traverse_b (start + 1)) m')
   | Ap(m1, m2) -> Ap((traverse_b start m1), (traverse_b start m2))
   | Ret(m0) -> Ret(traverse_b start m0)
-  | Bind(m1, m2) -> Bind((traverse_b start m1), (traverse_b (start + 1) m2))
+  | Bind(m1, (s, m2)) -> Bind((traverse_b start m1), (s, (traverse_b (start + 1) m2)))
   | Ref(v) -> Ref(traverse_b start v)
   | Asgn(r, e) -> Asgn((traverse_b start r), (traverse_b start e))
   | Deref r -> Deref(traverse_b start r)
@@ -72,7 +72,7 @@ let rec fold_expr (bc1: string -> 'a -> 'a) (bc2: int -> 'a -> 'a) (start: 'a): 
   | Lam (_, m') -> foldbc start m'
   | Ap(m1, m2) -> foldbc (foldbc start m2) m1
   | Ret(m0) -> foldbc start m0
-  | Bind(m1, m2) -> foldbc (foldbc start m2) m1
+  | Bind(m1, (_ , m2)) -> foldbc (foldbc start m2) m1
   | Ref(v) -> foldbc start v
   | Asgn(r, e) -> foldbc (foldbc start e) r
   | Deref r -> foldbc start r
@@ -91,9 +91,11 @@ let abstract i x = let bc = fun i -> (
     in
     traverse bc i
 
-let absList (l, m) = List.fold_right l ~f:(fun x -> fun m0 -> Lam(x, (abstract 0 (fst x) m0))) ~init:m
+let bind (m0, (name, m1)) = Bind(m0, (name, (abstract 0 name m1)))
 
-let applyList (m0, ms) = List.fold_left ms ~f:(fun bigapp -> fun mn -> Ap(bigapp, mn)) ~init:m0
+let absList (varlist, body) = List.fold_right varlist ~f:(fun var -> fun body0 -> Lam(var, (abstract 0 (fst var) body0))) ~init:body
+
+let applyList (fn, args) = List.fold_left args ~f:(fun bigapp -> fun arg -> Ap(bigapp, arg)) ~init:fn
 
 (*shift i dot m shifts m's bound variables up by i, only ignoring variables <= dot*)
 let shift i dot = let bc = fun dots -> (
@@ -121,7 +123,6 @@ let rec inst env  = let bc = fun _ -> (
 
 let free x = Free x
 let ret x = Ret x
-let bind (x, y) = Bind(x, y)
 let refexp x = Ref(x)
 let asgn(x, y) = Asgn(x, y)
 let deref x =  Deref x

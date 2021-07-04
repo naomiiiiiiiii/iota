@@ -68,10 +68,13 @@ let rec term toks =
    ) >> Source.absList) (*turns list of identifiers and body into a lam*)
   |:| ((keycircl atom "!") >> Source.deref)
   |:| ((keycircl atom "ret") >> Source.ret) (*looking for a ret. make ret: exp -> exp*)
-  |:| ((keycircl (keycircl (circ (keycircr ")" term) (*2nd term*)
+  |:| ((keycircl (keycircl (circ (circ
+                                    (keycircr ")" term)
+                                    (keycircr "." (keycircl id "\\"))
+                                 ) (*2nd term*)
                              (keycircr "," term)) (*1st term*)
                "(" )
-         "bind") >> Source.bind) (*looking for a bind. make bind : exp x exp -> exp*)
+         "bind") >> Source.bind) (*looking for a bind. make bind : exp x (string x exp) -> exp*)
   |:| ((keycircl atom "ref") >> Source.refexp) (*looking for a ref exp *)
   |:| ((circ term (keycircr ":=" atom)) >> Source.asgn) (*: (exp * exp) -> exp*)
  |:| ((circ (repeat atom) atom) >> Source.applyList) (*single atom or application of atoms

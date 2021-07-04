@@ -14,7 +14,7 @@ type exp = Free of string (*d*)
          | Lam of (string * typ) * exp (*done *)
          | Ap of exp * exp (*d*)
          | Ret of exp (*d*)
-         | Bind of exp * exp (*d*)
+         | Bind of exp * (string * exp)
          | Ref of exp (*modifies store, evaluates to location*) (*d*)
          | Asgn of exp * exp (*d*) (*modifies store, evaluates to unit*)
          | Deref of exp (*d*)
@@ -60,7 +60,7 @@ val inst: (string, exp, String.comparator_witness) Map.t -> exp -> exp
 (*i can't believe i can't use constructors as functions smh*)
 val free: string -> exp
 val ret: exp -> exp
-val bind: exp * exp -> exp
+val bind: exp * (string * exp) -> exp
 val refexp:  exp -> exp
 val asgn: exp * exp -> exp
 val deref : exp -> exp

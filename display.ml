@@ -15,16 +15,22 @@ let rec typ_to_string = function
 let rec rename bs a =
   if String_lib.member bs a then rename  bs (a ^ "'") else a
 
-let rec strip(bs, m) = match m with
-    Lam((x, tau), t) ->
-    let newx = rename (fvars t) x in
-        let x_annot =  "(" ^ newx ^ ":" ^ (typ_to_string tau) ^ ")"
-    in strip (x_annot :: bs, subst 0 (Free newx) t)
-  | _ -> (List.rev bs, m)
+(* evaluates to m2[0 := Free(x)] after varying x to avoid using a name that already occurs free in m2*)
+let zero_to_free (x, m2) = let newx = rename (fvars m2) x in (newx, subst 0 (Free newx) m2)
+ (*stops stripping as soon as it hits something that isn't a lambda*)
 
-let stripAbs m = strip([], m)
+let rec stripAbs_help(names, m) = match m with
+    Lam((x, tau), body) -> let (newx, newbody) = zero_to_free (x, body) in
+    let x_annot =  "(" ^ newx ^ ":" ^ (typ_to_string tau) ^ ")" in
+    stripAbs_help (x_annot :: names, newbody)
+  | _ -> (List.rev names, m) 
 
-(*let spaceJoin b acc = " " ^ b ^ acc*)
+(*stripAbs \(x1: tau_1)....\(xn: tau_n).M evaluates to
+(["(x1: tau1)", ... "(xn: taun)"], M') where M' = M[0 := Free(x1)]...[n:= Free(xn)]*)
+let stripAbs m = stripAbs_help([], m)
+
+let abs_prefix s1 s2 = "\\" ^ s1 ^ "." ^ s2
+
 let constant = function
   | Nat _ | Loc _ | Star -> true
   | _ -> false
@@ -35,12 +41,12 @@ let constant = function
   | Star -> "()"
   | Nat n -> string_of_int(n)
   | Loc n -> "Address: " ^ string_of_int(n) ^ "\n"
-  | Lam _ -> let (bs, body) = stripAbs m in
-    let front = "\\" ^ (String.concat bs) ^ "." in
-    front ^ (exp_to_string body)
+  | Lam _ -> let (names, body) = stripAbs m in
+    abs_prefix (String.concat names) (exp_to_string body)
   | Ap _ -> ap_to_string m
   | Ret(m0) -> "ret" ^ (atom_to_string m0)
-  | Bind(m1, m2) -> "bind(" ^ (exp_to_string m1) ^ " , " ^ (exp_to_string m2) ^ ")"
+  | Bind(m1, (s, m2)) -> let (name, body) = zero_to_free (s, m2) in
+    "bind(" ^ (exp_to_string m1) ^ " , " ^ (abs_prefix name (exp_to_string body)) ^ ")"
   | Ref(v) -> "ref" ^ (atom_to_string v)
   | Asgn(r, e) -> (atom_to_string r) ^ ":=" ^ (exp_to_string e)
   | Deref r -> "!"^(atom_to_string r)
