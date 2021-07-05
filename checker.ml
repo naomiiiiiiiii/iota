@@ -20,16 +20,16 @@ NOT a delayed reference*)
   end*)
 
 module type CHECKER = sig 
-  module State: State.STATE
+  type env_type = (string, typ * exp, String.comparator_witness) Map.t 
 exception TypeError of string
 (*for the bound varibales*)
-val checker : exp -> typ
+val checker : env_type -> exp -> typ
 end
 
-module Checker (State: State.STATE) : CHECKER = struct
+module Checker : CHECKER = struct
   exception TypeError of string
 
-  module State = State
+  type env_type = (string, typ * exp, String.comparator_witness) Map.t 
 
 (*job of type checker is to check a term after it is fully instantiated
 doing a list so that when i cons a (bound) variable on as (var 0) the indexes of the other
@@ -38,7 +38,7 @@ type context_typ = typ list
 
 (*restrict the interp env
   for the types of free variables*)
-let env = State.env (*only values allowed in here, in particular
+ (*only values allowed in here, in particular
                                    no references (effectful exps), only locations (after store has been updated)*)
 
 (*keeps track of the types of locations
@@ -67,19 +67,26 @@ let is_comp tau = match tau with
 but what is the bound variable CALLED?  *) 
 
 (*only ways to get a comp value are ret and ref*)
+let checker env = 
 let rec checker_help (g : context_typ) m = match m with
     Free id -> fst (opt_to_exn (Map.find env id) ("unbound identifier:" ^ id))
   | Bound i -> (opt_to_exn (List.nth g i) ("unbound variable:" ^ (Int.to_string i)))
   | Star -> Unit
   | Nat _ -> Nattp
   | Loc i -> raise (TypeError ("uninitialized location:" ^ (Int.to_string i))) (*the ONLY guys that have type ref(tau)*)
+  | Plus(m1, m2) -> let tau1 = checker_help g m1 and tau2 = checker_help g m2 in
+    (match (tau1, tau2) with
+      (Nattp, Nattp) -> Nattp
+    | _ -> raise (TypeError
+                    ("cannot add " ^ (Display.typ_to_string tau1) ^ " to " ^ (Display.typ_to_string tau2)))
+    )
   | Lam ((_, tau0), m) -> Arr (tau0, (checker_help (tau0:: g) m))
-  | Ap(fn, arg) -> let tau_arg = (checker_help g arg)
-    and tau_fn = (checker_help g fn) in
+  | Ap(fn, arg) -> let tau_arg = (checker_help g arg) and tau_fn = (checker_help g fn) in
     (match tau_fn with
       Arr(s, t) when (typ_equal s tau_arg) -> t
     | _ -> raise (TypeError ("cannot apply " ^ (Display.typ_to_string tau_fn) ^ " to " ^
-                  (Display.typ_to_string tau_arg))))
+                             (Display.typ_to_string tau_arg)))
+    )
   | Ret(m0) -> Comp (checker_help g m0) (*get a comp, and a value*)
   | Bind(m0, ( _, m1)) -> let tau_arg = get_comptype ((checker_help g m0))
     in let tau_out = (checker_help (tau_arg::g) m1) in
@@ -100,7 +107,7 @@ let rec checker_help (g : context_typ) m = match m with
        Reftp(tau_loc0) -> Comp(tau_loc0)
      | _ -> raise (TypeError ("cannot dereference " ^ (Display.typ_to_string tau_loc)))
     )
-
-let checker = checker_help [] 
+in checker_help []
+ 
 
 end

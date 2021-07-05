@@ -8,11 +8,12 @@ type typ = Nattp
            | Reftp of typ
            | Comp of typ
 
-  type exp = Free of string
+type exp = Free of string
          | Bound of int
          | Star
          | Nat of int
          | Loc of int
+         | Plus of exp * exp
          | Lam of (string * typ) * exp
          | Ap of exp * exp
          | Ret of exp
@@ -51,6 +52,7 @@ let rec traverse (bc: int -> (string -> exp) * (int -> exp)) (start: int): exp -
   | Star -> m
   | Nat _ -> m
   | Loc _ -> m
+  | Plus (m1, m2) -> Plus (traverse_b start m1, traverse_b start m2)
   | Lam (p, m') -> Lam(p, (traverse_b (start + 1)) m')
   | Ap(m1, m2) -> Ap((traverse_b start m1), (traverse_b start m2))
   | Ret(m0) -> Ret(traverse_b start m0)
@@ -69,6 +71,7 @@ let rec fold_expr (bc1: string -> 'a -> 'a) (bc2: int -> 'a -> 'a) (start: 'a): 
   | Star -> start
   | Nat _ -> start
   | Loc _ -> start
+  | Plus(m1, m2) -> foldbc (foldbc start m2) m1
   | Lam (_, m') -> foldbc start m'
   | Ap(m1, m2) -> foldbc (foldbc start m2) m1
   | Ret(m0) -> foldbc start m0
@@ -129,6 +132,7 @@ let deref x =  Deref x
 let star _ = Star
 let nat x = Nat x
 let loc x = Loc x
+let plus(x, y) = Plus(x, y)
 let arr (x, y) = Arr(x, y)
 let reftp x = Reftp(x)
 let comp x = Comp(x)

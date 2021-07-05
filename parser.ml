@@ -17,7 +17,7 @@ let cons (x, l) = x::l
 
   let id (toks: Lex.token list) = match toks with
       (Lex.Id s :: rem) -> (s, rem)
-    | _ -> raise (SyntaxErr "expected identifier\n")
+    | _ -> raise (SyntaxErr ("expected identifier, got " ^ (Lex.display_toks toks)))
 
   let key k toks = match toks with
       (Lex.Key k0 :: rem) when (String.equal k k0) -> (k, rem)

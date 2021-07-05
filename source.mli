@@ -11,6 +11,7 @@ type exp = Free of string (*d*)
          | Star (*d*)
          | Nat of int (*d*)
          | Loc of int
+         | Plus of exp * exp
          | Lam of (string * typ) * exp (*done *)
          | Ap of exp * exp (*d*)
          | Ret of exp (*d*)
@@ -67,6 +68,7 @@ val deref : exp -> exp
 val star : unit -> exp
 val nat : int -> exp
 val loc : int -> exp
+val plus : exp * exp -> exp
 val arr : typ * typ -> typ
 val reftp : typ -> typ
 val comp : typ -> typ

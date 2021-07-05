@@ -11,21 +11,24 @@ open Source
 
 module type REDUCER = sig 
   exception RuntimeError of string
-  module State : State.STATE
-  val eval: exp -> exp * State.store_type
+  type store_type = (int, exp, Int.comparator_witness) Map.t 
+  type env_type = (string, typ * exp, String.comparator_witness) Map.t
+  val eval: env_type -> store_type -> exp -> exp * store_type
 end
 
 (*probably need to put a with here*)
-module Reducer (State: State.STATE): REDUCER = struct
-
+module Reducer : REDUCER = struct
   exception RuntimeError of string
-  module State = State
-  let env = State.env
-  let store = State.store
+  type store_type = (int, exp, Int.comparator_witness) Map.t 
+  type env_type = (string, typ * exp, String.comparator_witness) Map.t
 
   let get_loc loc = match loc with
       Loc n -> n
     | _ -> raise (RuntimeError ("expected location, got " ^ (Display.exp_to_string loc)))
+
+  let get_nat exp_n = match exp_n with
+      Nat n -> n
+    | _ -> raise (RuntimeError ("expected nat, got " ^ (Display.exp_to_string exp_n)))
 
 (*adds a new reference containing m to s, returns the index of this new reference
 and the new store *)
@@ -44,11 +47,16 @@ let deref loc s = let index = (get_loc loc) in match (Map.find s index) with
     None -> raise (RuntimeError ("dereferencing uninitialized location " ^ (Int.to_string index)))
   | Some m -> (m, s)
 
-let rec eval_help (m, s) = match m with
+let eval env store_in m_in =
+  let rec eval_help (m, s) =
+  match m with
     Free id -> eval_help (snd (Map.find_exn env id), s)
   | Star | Nat _ | Loc _ | Lam _ | Ret _ | Ref _ | Asgn _ | Deref _ -> (m, s) (*ret, ref, asgn, deref are suspended computations*)
-  | Ap(fn, arg) -> let (fnval, s1) = (eval_help (fn, s)) in
-    let (argval, s2) = (eval_help (arg, s1)) in
+  | Plus(m1, m2) -> let (m1val, s1) = eval_help (m1, s) in
+    let (m2val, s2) = eval_help (m2, s1) in
+    (Nat ((get_nat m1val) + (get_nat m2val)), s2)
+  | Ap(fn, arg) -> let (fnval, s1) = eval_help (fn, s) in
+    let (argval, s2) = eval_help (arg, s1) in
     (match fnval with
       Lam(_, body) -> eval_help ((subst 0 argval body), s2)
      | _  -> (Ap(fnval, argval), s2))
@@ -57,7 +65,6 @@ let rec eval_help (m, s) = match m with
     eval_help (subst 0 m1val (snd m2), s2)
   | exception RuntimeError err -> raise (RuntimeError err)
   | Bound _ | exception _ -> raise (RuntimeError ("failing on " ^ (Display.exp_to_string m)))
-
 (*evaluates what is underneath the structure that suspends m and carries out any effects
 gives (m', s') where m' is the finished result of the once-delayed computation
 and s' is the new store*)    
@@ -68,8 +75,8 @@ and bind_eval (m, s) = match m with
     let (m1val, s2) = eval_help(m1, s1) in (assign_ref locval m1val s2) 
   | Deref(loc) -> let (locval, s1) = eval_help (loc, s) in (deref locval s1)
   | _ -> raise (RuntimeError ((Display.exp_to_string m) ^ " not bindable"))
+in eval_help (m_in, store_in)
 
-
-let eval m = eval_help (m, store)
+(*start here should flip m and store around*)
 
 end

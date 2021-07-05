@@ -46,6 +46,7 @@ let constant = function
   | Star -> "()"
   | Nat n -> string_of_int(n)
   | Loc n -> "Address: " ^ string_of_int(n) ^ "\n"
+  | Plus(m1, m2) -> (atom_to_string m1 nospace) ^ "+" ^ (atom_to_string m2 nospace)
   | Lam _ -> let (names, body) = stripAbs m in
     abs_prefix (String.concat names) (exp_to_string body)
   | Ap _ -> ap_to_string m
@@ -64,7 +65,7 @@ and ap_to_string m = match m with (*once ap_to_stringp is entered all terms
 and atom_to_string m sp = match m with
     Free(a) ->  sp ^ a  
   |  _ when (constant m) -> sp ^ (exp_to_string m)
-  | _ -> "(" ^ (exp_to_string m) ^ ") "
+  | _ -> sp ^ "(" ^ (exp_to_string m) ^ ")"
 
 
 let print_typ m = print_endline(typ_to_string m)

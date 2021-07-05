@@ -14,8 +14,8 @@ let cons (x, l) = x::l
 
 
 module SourceKey : Scanner.KEYWORD = struct
-  let alpha_num = ["ret"; "bind"; "let"; "ref"; "in"; "Nat"; "Unit"; "Ref"; "Comp"]
-  and symbols = ["("; ")"; "\\"; "."; "="; ":="; "!"; "->"] (*took out **)
+  let alpha_num = ["ret"; "bind"; "let"; "ref"; "in"; "Nat"; "Unit"; "Ref"; "Comp"; "let"]
+  and symbols = ["("; ")"; "\\"; "."; "="; ":="; "!"; "->"; "+"]
   and commentl = '['
   and commentr = ']'
 end
@@ -77,13 +77,16 @@ let rec term toks =
          "bind") >> Source.bind) (*looking for a bind. make bind : exp x (string x exp) -> exp*)
   |:| ((keycircl atom "ref") >> Source.refexp) (*looking for a ref exp *)
   |:| ((circ term (keycircr ":=" atom)) >> Source.asgn) (*: (exp * exp) -> exp*)
- |:| ((circ (repeat atom) atom) >> Source.applyList) (*single atom or application of atoms
+  |:| (circ atom (keycircr "+" atom) >> Source.plus)
+  |:| ((circ (repeat atom) atom) >> Source.applyList) (*single atom or application of atoms
                                                           start here i dont think apply list should be in source*)
     ) toks
 and atom toks = ((id >> Source.free)
                   |:| constant
                   |:| (keycircr ")" (keycircl term "("))) toks
                  
-let read s = match term (SourceLex.scan s) with
-    (m, []) -> m
-  | (_, _::_) -> raise (SyntaxErr "Extra characters in phrase")
+let read s = 
+  match s |> SourceLex.scan |> (circ term
+                      (keycircr "=" (keycircl id "let"))) with
+  (p, []) -> p
+| (_, _::_) -> raise (SyntaxErr "Extra characters in phrase")

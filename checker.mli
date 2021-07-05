@@ -1,3 +1,4 @@
+open Core_kernel
 open Source
 (*job of type checker is to check a term after it is fully instantiated*)
 
@@ -9,7 +10,7 @@ module type TYPESTATE = sig
   end*)
 
 module type CHECKER = sig
-  module State: State.STATE
+  type env_type = (string, typ * exp, String.comparator_witness) Map.t 
   exception TypeError of string
 (*for the bound varibales
   type context_typ*)
@@ -35,8 +36,8 @@ i have to produce it each time
 probs best to use map with length and then always add it at the end
   since jane street doesnt have dynamic array*)
 
-val checker : exp -> typ
+val checker : env_type -> exp -> typ
 
 end
 
-module Checker (State: State.STATE) : CHECKER
+module Checker : CHECKER
