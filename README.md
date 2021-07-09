@@ -1,10 +1,12 @@
 Iota is a variant of the simply typed lambda calculus supporting a global memory store, general references, and the computation monad as primitives. 
 
-The above implements an interpreter and REPL for Iota. It uses the build dune system. To run the REPL, install dune, then run
+This development implements an interpreter and REPL for Iota. It uses the build dune system. To run the REPL, install dune, then run
 
-dune build interp.exe
+```
+>> dune build interp.exe
 
-_build/default/interp.exe 
+>> _build/default/interp.exe
+``` 
 
 from the directory containing the dune file
 
