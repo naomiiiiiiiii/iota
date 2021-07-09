@@ -1,12 +1,10 @@
+(*various parser combinators*)
 
 module type PARSER = sig
   type token
 
 exception SyntaxErr of string
 exception SyntaxErr_forced of string
-
-(*module Lex: Scanner.LEXICAL*)
-  (*if a precondition is not met, raise syntax error*)
 
   (*PRE: L = (Id s)::rem, ie L starts with identifier token
     POST: id L = (s, rem)*)
@@ -27,38 +25,36 @@ exception SyntaxErr_forced of string
   (*POST: epsilon L = ([], L)*)
   val epsilon : token list -> 'b list * token list
 
-  (*POST: join f g a tries f a. if this fails, it returns g a.*)
+  (*POST: (f |:| g) L tries f L. if this fails, it evaluates to g L.*)
   val (|:|) : (token list -> 'b) -> (token list -> 'b) -> token list -> 'b
 
-  (*POST: force f tries f a. if this fails, it forces toplevel failure.*)
+  (*POST: force f L tries f L. if this fails, it forces the whole parser to fail.*)
   val force : (token list -> 'b * token list ) -> token list -> 'b * token list
 
   (* PRE: f a = (out1, rem1), g rem1 = (out2, rem2)
-POST: circ g f applies f and g in sequence. that is,
-circ g f a = ((out1, out2), rem2)*)
+POST: circ g f does g composed with f. that is, circ g f a = ((out1, out2), rem2)*)
   val circ : (token list -> 'd * token list) -> (token list -> 'b * token list)
     -> token list -> ('b * 'd) * token list
 
   (* PRE: g rem = (out2, rem')
-POST: keycircl g k applies (key k) and g in sequence. that is,
-keycircl g k (Key k::rem) = (out2, rem')*)
-  val keycircl : (token list -> 'a * token list) -> string -> token list ->
+POST: keycircr g k does g o (key k), but it throws out k. that is, keycircr g k (Key k::rem) = (out2, rem')*)
+  val keycircr : (token list -> 'a * token list) -> string -> token list ->
     'a * token list
 
   (* PRE: g L = (out1, Key k :: rem')
-POST: keycircr k g applies g and (key k) in sequence. that is,
-keycircr g k L = (out1, rem')*)
-  val keycircr : string -> (token list -> 'a * token list) -> token list ->
+POST: keycircl k g does (key k) o g, but it throws out k. that is, keycircl g k L = (out1, rem')*)
+  val keycircl : string -> (token list -> 'a * token list) -> token list ->
     'a * token list
 
-  (*POST: pipe f g pipes (the first component) of the output of f into g.
-ie, pipe f g a = ((g (f a).1), (f a).2)*)
+  (*POST: p >> f pipes (the first component) of the output of p into f. ie, (p >> f) a = ((g (p a).1), (p a).2)
+  *)
   val (>>): (token list -> 'b * token list) -> ('b -> 'd) ->
     token list -> 'd * token list
 
-  (*POST: repeat f start L = (L, a) where
-L = [(f start).1, (f (f start).2).1, ...]
-f a failed*)
+  (*POST: (repeat f start) applies f to start until f fails, recording the result of each application. that is, repeat f start = (L1, L2) where L1 has length n and
+L1 = [(f start).1, (f (f start).2).1, ... ((f o (2 o f)^{n-1}) start).1]
+L2 = ((f o (2 o f)^{n-1}) start).2
+f L2 failed*)
   val repeat : (token list -> 'b * token list) -> token list -> 'b list * token list
 
   (*POST: reader p s will scan s into a token list, then give the token list

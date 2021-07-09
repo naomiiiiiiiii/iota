@@ -2,6 +2,7 @@
 
 (executable
  (name interp)
+ (modules_without_implementation reduce)
  (libraries base stdio core core_kernel)
  )
 
