@@ -1,9 +1,16 @@
-inspired by my research with Karl Crary and 'ML for the working programmer' by LC Paulson, I wrote an interpreter for our variant of the lambda calculus featuring global state and general references.
+Iota is a variant of the simply typed lambda calculus supporting a global memory store, general references, and the computation monad as primitives. 
 
-define the grammar so that it's clear function args have to be in parens
+The above implements an interpreter and REPL for Iota. It uses the build dune system. To run the REPL, install dune, then run
 
-to understand parsing errors:
-tokens are displayed as follows:
-a keyword s := key~s
-an identifier x := id~x
-a numeral n := n
+dune build interp.exe
+
+_build/default/interp.exe 
+
+from the directory containing the dune file
+
+The grammar for Iota is:
+![alt text]( https://github.com/misstaggart/monad_interpreter/blob/master/iota_grammar.png)
+
+One of the most entertaining parts of this development was using parsing combinators. They aren’t related to my research, but I find them aesthetically pleasing. Look in source_parser.ml!
+
+This work is inspired by LC Paulson’s *ML for the working programmer* and is done under the mentorship of Karl Crary.
