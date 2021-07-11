@@ -10,9 +10,7 @@ open Parser
 
 let cons (x, l) = x::l
 
-(*shouldnt ever need to parse types,just print them from AST, going other way*)
-
-
+(*definition of iota*)
 module SourceKey : Scanner.KEYWORD = struct
   let alpha_num = ["ret"; "bind"; "let"; "ref"; "in"; "Nat"; "Unit"; "Ref"; "Comp"; "let"]
   and symbols = ["("; ")"; "\\"; "."; "="; ":="; "!"; "->"; "+"]
@@ -22,71 +20,58 @@ end
 
 module SourceLex : Scanner.LEXICAL = Scanner.Lexical(SourceKey)
 
+(*parsing combinators for iota*)
 module SourceParser : (Parser_sig.PARSER with type token = SourceLex.token) = Parser(SourceLex)
 
+open SourceParser
 
-  open SourceParser
+(*parse constant value*)
+let constant =  (natp >> Source.nat)
+                |:| (starp >> Source.star)
+(*parse base type*)
+let constant_typ = ((key "Nat") >> (fun _ -> Source.Nattp))
+                   |:| ((key "Unit") >> (fun _ -> Source.Unit))
 
-  let constant =  (natp >> Source.nat)
-                   |:| (starp >> Source.star)
-
-  let constant_typ = ((key "Nat") >> (fun _ -> Source.Nattp))
- |:| ((key "Unit") >> (fun _ -> Source.Unit))
-
-
-
-  (*want this to be tok list -> type * tok list*)
-  let rec typp toks = (((circ (keycircl atom_typp  "->") atom_typp) >> Source.arr)
-    |:| ((keycircl atom_typp "Ref") >> Source.reftp)
-    |:| ((keycircl atom_typp "Comp") >> Source.comp)
+(*parse a type*)
+  let rec typp toks = (((circ (keycircr atom_typp  "->") atom_typp) >> Source.arr)
+    |:| ((keycircr atom_typp "Ref") >> Source.reftp)
+    |:| ((keycircr atom_typp "Comp") >> Source.comp)
     |:| atom_typp) toks
-                    (*start here automate the surrounded by parens thing,
-                    shows up in 3 places*)
 and atom_typp toks = (constant_typ
- |:|(keycircr ")" (keycircl typp "("))) toks
-(*and atom_typp toks =
-  let (s, rem) = (print_endline("running atom_typ on " ^ (SourceLex.display_toks toks));
-((constant_typ
-                     |:|(keycircr ")" (keycircl typp "("))) toks)) in
-  print_endline("output tokens:"^(SourceLex.display_toks rem)); (s, rem)*)
+ |:|(keycircl ")" (keycircr typp "("))) toks
 
-let typed_id =keycircr ")" (circ typp (keycircr ":" (keycircl id "(")))
+(*parse a type-annotated variable*)
+let typed_id =keycircl ")" (circ typp (keycircl ":" (keycircr id "(")))
 
-(*let typed_id toks =
-print_endline ("in typed_id with "^ (SourceLex.display_toks toks)); 
-let (s, rem) = keycircr ")" (circ typp (keycircr ":" (keycircl id "("))) toks in
-  print_endline ("out of typed_id with" ^ (SourceLex.display_toks rem)); (s, rem)*)
-
+(*parse a term*)
 let rec term toks =
-(((circ term (*look for body of the lambda *)
-      ((keycircr "."
-          (keycircl 
-             (circ (repeat typed_id) typed_id) (*look for all the captured vars with
-                                               type annotations**)
+(((circ term
+      ((keycircl "."
+          (keycircr 
+             (circ (repeat typed_id) typed_id)
              "\\") (*looking for a lambda*)
-       ) >> cons) (*collects identifiers into a list*)
-   ) >> Source.absList) (*turns list of identifiers and body into a lam*)
-  |:| ((keycircl atom "!") >> Source.deref)
-  |:| ((keycircl atom "ret") >> Source.ret) (*looking for a ret. make ret: exp -> exp*)
-  |:| ((keycircl (keycircl (circ (circ
-                                    (keycircr ")" term)
-                                    (keycircr "." (keycircl id "\\"))
-                                 ) (*2nd term*)
-                             (keycircr "," term)) (*1st term*)
+       ) >> cons) (*collects bound identifiers into a list*)
+   ) >> Source.absList) (*combines list of identifiers and body into a Lam*)
+  |:| ((keycircr atom "!") >> Source.deref)
+  |:| ((keycircr atom "ret") >> Source.ret)
+  |:| ((keycircr (keycircr (circ (circ
+                                    (keycircl ")" term) (*2nd term*)
+                                    (keycircl "." (keycircr id "\\"))
+                                 ) 
+                             (keycircl "," term)) (*1st term*)
                "(" )
-         "bind") >> Source.bind) (*looking for a bind. make bind : exp x (string x exp) -> exp*)
-  |:| ((keycircl atom "ref") >> Source.refexp) (*looking for a ref exp *)
-  |:| ((circ term (keycircr ":=" atom)) >> Source.asgn) (*: (exp * exp) -> exp*)
-  |:| (circ atom (keycircr "+" atom) >> Source.plus)
-  |:| ((circ (repeat atom) atom) >> Source.applyList) (*single atom or application of atoms
-                                                          start here i dont think apply list should be in source*)
+         "bind") >> Source.bind) 
+  |:| ((keycircr atom "ref") >> Source.refexp) 
+  |:| ((circ term (keycircl ":=" atom)) >> Source.asgn) 
+  |:| (circ atom (keycircl "+" atom) >> Source.plus)
+  |:| ((circ (repeat atom) atom) >> Source.applyList) (*single atom or application of atoms*)
     ) toks
 and atom toks = ((id >> Source.free)
                   |:| constant
-                  |:| (keycircr ")" (keycircl term "("))) toks
+                  |:| (keycircl ")" (keycircr term "("))) toks
                  
 let read s = 
   match s |> SourceLex.scan |> (circ term
-                      (keycircr "=" (keycircl id "let"))) with
+                      (keycircl "=" (keycircr id "let"))) with
   (p, []) -> p
 | (_, _::_) -> raise (SyntaxErr "Extra characters in phrase")

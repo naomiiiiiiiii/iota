@@ -1,8 +1,5 @@
-; (copy_files# ./cmtool/ocaml/FStream.ml)
-
 (executable
  (name interp)
- (modules_without_implementation reduce)
  (libraries base stdio core core_kernel)
  )
 

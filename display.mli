@@ -1,19 +1,10 @@
-
-(*
-these shouldnt be in the signature
-rename l s returns an s' such that s' \notin l
-val rename : string list -> string -> string
-(* PRE: M = \x1..xn.M0
-   POST: stripabs M = ([x1 ... xn], M0), where M0 refers to x1 as Free(x1)
-   ie, stripabs turns a lambda into a list of bound variables
-   and its body*)
-  val stripAbs : Lang.exp -> string list * Lang.exp*)
+(*display interface for iota (the source language)*)
 
 val typ_to_string: Source.typ -> string
 val exp_to_string: Source.exp -> string
 
 (*prints to stdout*)
 val print_typ: Source.typ -> unit
-  val print_exp : Source.exp -> unit
+val print_exp : Source.exp -> unit
 
 

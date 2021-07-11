@@ -1,4 +1,4 @@
-(*various parser combinators*)
+(*various parsing combinators*)
 
 module type PARSER = sig
   type token

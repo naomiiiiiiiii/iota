@@ -18,9 +18,7 @@ type exp = Free of string
          | Ap of exp * exp
          | Ret of exp
          | Bind of exp * (string * exp)
-         | Ref of exp (*ref(e) evaluates to a location (key) after storing e at that location.
-                      need to pass a particular ref(e) around as an argument wherever you go, two
-                      ref(e) are not the same reference!*)
+         | Ref of exp
          | Asgn of exp * exp
          | Deref of exp
 
@@ -32,16 +30,10 @@ let rec typ_equal x y = match (x, y) with
   | (Comp(x1), Comp(y1)) -> typ_equal x1 y1
   | _ -> false
 
-(* exp_equal
-  | (Asgn(x1), Asgn(y1)) -> typ_equal x1 y1
-   | (Deref(x1), Deref(y1)) -> typ *)
-
-
-
 (*a lot of functions regarding exps involve iterating over
-  the structure of a term, incrementing some nat argument when you go under a lambda
+  the structure of a term, incrementing some nat argument when you go under a binder
 bc is what to do on the base case expressions
-like mapi but for exp*)
+think of it as like mapi but for exp*)
 let rec traverse (bc: int -> (string -> exp) * (int -> exp)) (start: int): exp -> exp
   = fun m ->
     let traverse_b = traverse bc in
@@ -87,6 +79,9 @@ let fvars =
     fold_expr bc1 bc2 []
 
 
+(* abstract : int -> string -> exp -> exp
+PRE: i >= 0
+POST: abstract i x M will turn all free occurences of x into the bound variable i*)
 let abstract i x = let bc = fun i -> (
       let free = fun a -> if (String.equal a x) then (Bound i) else (Free a)
       and bound = fun j -> (Bound j)
@@ -94,13 +89,13 @@ let abstract i x = let bc = fun i -> (
     in
     traverse bc i
 
-let bind (m0, (name, m1)) = Bind(m0, (name, (abstract 0 name m1)))
 
 let absList (varlist, body) = List.fold_right varlist ~f:(fun var -> fun body0 -> Lam(var, (abstract 0 (fst var) body0))) ~init:body
 
 let applyList (fn, args) = List.fold_left args ~f:(fun bigapp -> fun arg -> Ap(bigapp, arg)) ~init:fn
 
-(*shift i dot m shifts m's bound variables up by i, only ignoring variables <= dot*)
+(* shift: int -> int -> exp -> exp
+shift i dot m shifts m's bound variables up by i, only ignoring variables <= dot*)
 let shift i dot = let bc = fun dots -> (
       let free = fun a -> (Free a)
       and bound = fun j -> if j>=dots then Bound(j+i) else Bound j
@@ -115,24 +110,19 @@ let subst i v = let bc = fun i' -> (
       in (free, bound))
   in traverse bc i
 
-
-(*0 arg to traverse is useless; i just wanted to use my cool HOF instead of writing out
-the cases*)
-let rec inst env  = let bc = fun _ -> (
-      let free = fun a -> try (inst env (Map.find_exn env a)) with (Not_found_s _) -> Free a
-      and bound = fun j -> Bound j in
-      (free, bound))
-    in traverse bc 0
-
 let free x = Free x
-let ret x = Ret x
-let refexp x = Ref(x)
-let asgn(x, y) = Asgn(x, y)
-let deref x =  Deref x
 let star _ = Star
 let nat x = Nat x
 let loc x = Loc x
+let lam ((s, t), e) = Lam ((s, t), e)
+let ap (m1, m2) = Ap (m1, m2)
 let plus(x, y) = Plus(x, y)
+let ret x = Ret x
+let bind (m0, (name, m1)) = Bind(m0, (name, (abstract 0 name m1)))
+let refexp x = Ref(x)
+let asgn(x, y) = Asgn(x, y)
+let deref x =  Deref x
+
 let arr (x, y) = Arr(x, y)
 let reftp x = Reftp(x)
 let comp x = Comp(x)

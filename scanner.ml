@@ -12,7 +12,6 @@ end
 
 module type LEXICAL = sig
   type token = Id of string | Key of string | Nat of int
-(*put unsigned int from here if you ever use it https://opam.ocaml.org/packages/stdint/*)
   val scan: string -> token list
 val display_toks : token list -> string
 end
@@ -20,6 +19,7 @@ end
 module Lexical (Keywords: KEYWORD) : LEXICAL = struct
   type token = Id of string | Key of string | Nat of int
 
+  (*tildes are just for legibility*)
   let display_tok t = match t with
       Id s -> " id~" ^ s
     | Key s -> " key~" ^ s
@@ -28,21 +28,22 @@ module Lexical (Keywords: KEYWORD) : LEXICAL = struct
   let display_toks l = String.concat (List.map ~f:display_tok l)
 
 (*PRE: a is a string comprised of alphanumeric characters
-  POST: token resulting from scanning a*)
+  POST: alphaTok a is the token resulting from scanning a as a keyword or identity*)
  let alphaTok : string -> token = fun a ->
    if (MyString.member Keywords.alpha_num a) then Key(a) else Id(a)
 
+(*PRE: a is a string comprised of digits
+  POST: natTok a is the token resulting from scanning a as a numeral*)
  let natTok a =
    try (let nat = int_of_string(a) in
                                              if (nat < 0) then
                                                (raise (Failure "Nats cannot be negative!"))
                                              else (Nat nat))
-   with Failure error -> raise (Failure (error^" in NatTok"))
+   with Failure error -> raise (Failure (error^" in NatTok")) (*catch exns from int_of_string*)
 
-(*TYPE: scan_symbol: string x string -> token x string
+(*scan_symbol: string x string -> token x string
 PRE: front nonempty, comprised of punctuation
-POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
-   (front ++ rem) and rem' is remainder of rem left unscanned*)
+POST: scan_symbol(front, rem) evaluates to (tok, rem') where tok is the first symbolic token in (front ++ rem) and rem' is remainder of rem left unscanned*)
   let rec scan_symbol(front, rem) =
     match (MyString.getc rem) with
       None -> (Key(front), rem)
@@ -51,7 +52,7 @@ POST: outputs a tuple (tok, rem') where tok is the first symbolic token in
       then (Key(front), rem)
       else scan_symbol(front^String.of_char(head), tail)
 
-(*TYPE: scan_fn_help: token list x string -> token list
+(*scan_fn_help: token list x string -> token list
 PRE: toks is list of tokens already scanned (read from right to left),
   s is string remaining to be scanned
 POST: ouputs a list containing (the tokens from toks, then the tokens scanned from s)
@@ -73,31 +74,8 @@ POST: ouputs a list containing (the tokens from toks, then the tokens scanned fr
         (tok::toks, rem)
       else (toks, (String.lstrip ~drop:(o not MyString.isGraph) s))
         in scan_help newtoks news
-(*scan_symbol can do symbols of length > 1 and takes in a rem, come back here and fix comments*)
   let scan = scan_help []
 
 end
 
 
-(*use sets instead of lists https://ocaml.janestreet.com/ocaml-core/109.55.00/tmp/core_kernel/Set.html*)
-
-(*Definition 1 : bool := true. doesnt work
-Definition 1x : bool := true. doesnt work
-Definition x1 : bool := true. works
- *)
-
-(*types are
-  nat: contains primitive values
-  unit: contains primotive values
-  arrow: keyword
-  ref: keyword
-  comp: keyword
-
-a variable cannot be named a number
-  it must be proceeded by a letter
-  if an number is on its own then its a number *)
-
-(*use streams
-  Stream.of_string builds a char stream from a string <-
-what you're really doing with those string functions is implementing a stream,
-rephrase it in those terms by looking at the cmtool manual*)
