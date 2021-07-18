@@ -1,7 +1,9 @@
 include Base
 include Core
 include Core_kernel
+include String_lib
 include Source
+
 
 let rec typ_to_string = function
     Nattp -> "Nat"
