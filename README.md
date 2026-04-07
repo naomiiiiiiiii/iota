@@ -1,4 +1,4 @@
-Iota is a variant of the simply typed lambda calculus supporting a global memory store, general references, and the computation monad as primitives. 
+Iota is a variant of the simply typed lambda calculus supporting a global memory store, general references, and the computation monad as primitives. For my undergraduate thesis, I shallowly embedded this language into [Istari](https://istarilogic.org/) and verified that the embedding is type-preserving. 
 
 This development implements an interpreter and REPL for Iota. It uses the dune build system. To run the REPL, install dune, then run
 
