@@ -21,4 +21,4 @@ The grammar for Iota is:
 
 One of the most entertaining parts of this development was using parsing combinators. They aren’t related to my research, but I find them aesthetically pleasing. Look in source_parser.ml!
 
-This work is inspired by LC Paulson’s *ML for the working programmer* and is done under the mentorship of Karl Crary.
+This repo uses code and design ideas found in LC Paulson’s *ML for the working programmer* and is done under the mentorship of Karl Crary.
