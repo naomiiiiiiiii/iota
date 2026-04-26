@@ -19,7 +19,7 @@ exception SyntaxErr_forced of string
   val natp: token list -> int * token list
 
   (*PRE: L = Star::rem, ie L starts with unit token
-    POST: natp L = ((), rem)*)
+    POST: starp L = ((), rem)*)
   val starp: token list -> unit * token list
 
   (*POST: epsilon L = ([], L)*)
